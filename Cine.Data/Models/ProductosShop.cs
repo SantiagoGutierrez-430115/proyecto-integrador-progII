@@ -26,4 +26,6 @@ public partial class ProductosShop
     public virtual TiposProducto IdTipoProductoNavigation { get; set; } = null!;
 
     public virtual ICollection<ProductosCombo> ProductosCombos { get; set; } = new List<ProductosCombo>();
+
+    public virtual ICollection<PromocionesArticulo> PromocionesArticulos { get; set; } = new List<PromocionesArticulo>();
 }

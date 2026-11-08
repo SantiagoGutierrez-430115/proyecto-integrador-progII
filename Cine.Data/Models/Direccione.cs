@@ -11,7 +11,7 @@ public partial class Direccione
 
     public int Altura { get; set; }
 
-    public int? Piso { get; set; }
+    public string? Piso { get; set; }
 
     public string? Depto { get; set; }
 

@@ -7,11 +7,11 @@ public partial class ClientesContacto
 {
     public int IdClientesContacto { get; set; }
 
-    public int? IdContacto { get; set; }
+    public int IdContacto { get; set; }
 
-    public int? CodCliente { get; set; }
+    public int CodCliente { get; set; }
 
-    public virtual Cliente? CodClienteNavigation { get; set; }
+    public virtual Cliente CodClienteNavigation { get; set; } = null!;
 
-    public virtual Contacto? IdContactoNavigation { get; set; }
+    public virtual Contacto IdContactoNavigation { get; set; } = null!;
 }

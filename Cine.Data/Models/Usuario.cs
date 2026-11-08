@@ -7,13 +7,15 @@ public partial class Usuario
 {
     public int IdUsuario { get; set; }
 
-    public string Email { get; set; } = null!;
+    public string NombreUsuario { get; set; } = null!;
 
-    public string PasswordHash { get; set; } = null!;
+    public string Contraseña { get; set; } = null!;
 
     public int IdRol { get; set; }
 
+    public string CorreoElectronico { get; set; } = null!;
+
     public virtual Cliente? Cliente { get; set; }
 
-    public virtual Role IdRolNavigation { get; set; } = null!;
+    public virtual Role Rol { get; set; } = null!;
 }

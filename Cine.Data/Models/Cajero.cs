@@ -13,11 +13,11 @@ public partial class Cajero
 
     public int IdTurno { get; set; }
 
-    public int? IdSucursal { get; set; }
+    public int IdSucursal { get; set; }
 
     public virtual ICollection<Factura> Facturas { get; set; } = new List<Factura>();
 
-    public virtual Sucursale? IdSucursalNavigation { get; set; }
+    public virtual Sucursale IdSucursalNavigation { get; set; } = null!;
 
     public virtual Turno IdTurnoNavigation { get; set; } = null!;
 }

@@ -9,9 +9,9 @@ public partial class PeliculasGenero
 
     public int IdPelicula { get; set; }
 
-    public int? IdGenero { get; set; }
+    public int IdGenero { get; set; }
 
-    public virtual Genero? IdGeneroNavigation { get; set; }
+    public virtual Genero IdGeneroNavigation { get; set; } = null!;
 
     public virtual Pelicula IdPeliculaNavigation { get; set; } = null!;
 }

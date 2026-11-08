@@ -11,7 +11,7 @@ public partial class PreferenciasCliente
 
     public int IdGenero { get; set; }
 
-    public bool? SuscribeNewsletter { get; set; }
+    public bool SuscribeNewsletter { get; set; }
 
     public virtual Cliente CodClienteNavigation { get; set; } = null!;
 

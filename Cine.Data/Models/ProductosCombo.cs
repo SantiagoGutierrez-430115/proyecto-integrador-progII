@@ -13,6 +13,8 @@ public partial class ProductosCombo
 
     public decimal PrecioUnitario { get; set; }
 
+    public int Cantidad { get; set; }
+
     public virtual Combo IdComboNavigation { get; set; } = null!;
 
     public virtual ProductosShop IdProductoShopNavigation { get; set; } = null!;

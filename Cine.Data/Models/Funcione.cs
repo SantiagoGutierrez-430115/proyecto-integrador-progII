@@ -25,7 +25,5 @@ public partial class Funcione
 
     public virtual ICollection<PromocionesFuncione> PromocionesFunciones { get; set; } = new List<PromocionesFuncione>();
 
-    public virtual ICollection<ReservaDetalle> ReservaDetalles { get; set; } = new List<ReservaDetalle>();
-
     public virtual ICollection<Reserva> Reservas { get; set; } = new List<Reserva>();
 }

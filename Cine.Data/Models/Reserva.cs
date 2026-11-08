@@ -7,7 +7,7 @@ public partial class Reserva
 {
     public int IdReserva { get; set; }
 
-    public DateOnly? Fecha { get; set; }
+    public DateTime Fecha { get; set; }
 
     public int IdFuncion { get; set; }
 

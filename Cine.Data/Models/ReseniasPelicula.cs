@@ -7,7 +7,7 @@ public partial class ReseniasPelicula
 {
     public int IdResenia { get; set; }
 
-    public string Comentario { get; set; } = null!;
+    public string? Comentario { get; set; }
 
     public DateTime FechaResenia { get; set; }
 

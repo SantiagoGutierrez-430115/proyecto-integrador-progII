@@ -9,7 +9,9 @@ public partial class Financiera
 
     public string Financiera1 { get; set; } = null!;
 
-    public virtual ICollection<Factura> Facturas { get; set; } = new List<Factura>();
+    public virtual ICollection<FacturasFormasPago> FacturasFormasPagos { get; set; } = new List<FacturasFormasPago>();
+
+    public virtual ICollection<FinancierasFormasPago> FinancierasFormasPagos { get; set; } = new List<FinancierasFormasPago>();
 
     public virtual ICollection<Promocione> Promociones { get; set; } = new List<Promocione>();
 }

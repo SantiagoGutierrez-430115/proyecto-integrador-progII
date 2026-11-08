@@ -9,13 +9,9 @@ public partial class ReservaDetalle
 
     public int IdReserva { get; set; }
 
-    public int IdFuncion { get; set; }
-
     public int IdButaca { get; set; }
 
     public virtual Butaca IdButacaNavigation { get; set; } = null!;
-
-    public virtual Funcione IdFuncionNavigation { get; set; } = null!;
 
     public virtual Reserva IdReservaNavigation { get; set; } = null!;
 }

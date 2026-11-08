@@ -9,9 +9,9 @@ public partial class PeliculasIdioma
 
     public int IdPelicula { get; set; }
 
-    public int? IdIdioma { get; set; }
+    public int IdIdioma { get; set; }
 
-    public virtual Idioma? IdIdiomaNavigation { get; set; }
+    public virtual Idioma IdIdiomaNavigation { get; set; } = null!;
 
     public virtual Pelicula IdPeliculaNavigation { get; set; } = null!;
 }

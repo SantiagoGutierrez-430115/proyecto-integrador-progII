@@ -10,4 +10,6 @@ public partial class TiposSala
     public string TipoSala { get; set; } = null!;
 
     public virtual ICollection<Sala> Salas { get; set; } = new List<Sala>();
+
+    public virtual TarifasEntrada? TarifasEntrada { get; set; }
 }

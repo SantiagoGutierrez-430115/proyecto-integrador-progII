@@ -11,19 +11,17 @@ public partial class Cliente
 
     public string Apellido { get; set; } = null!;
 
-    public int NroDoc { get; set; }
+    public string NroDoc { get; set; } = null!;
 
     public int IdTipoDoc { get; set; }
 
     public DateOnly? FechaNacimiento { get; set; }
 
-    public DateTime FechaRegistro { get; set; }
-
-    public string Contraseña { get; set; } = null!;
+    public DateOnly FechaRegistro { get; set; }
 
     public int? IdDireccion { get; set; }
 
-    public int? IdUsuario { get; set; }
+    public int IdUsuario { get; set; }
 
     public virtual ICollection<ClientesContacto> ClientesContactos { get; set; } = new List<ClientesContacto>();
 
@@ -33,7 +31,7 @@ public partial class Cliente
 
     public virtual TiposDocumento IdTipoDocNavigation { get; set; } = null!;
 
-    public virtual Usuario? IdUsuarioNavigation { get; set; }
+    public virtual Usuario IdUsuarioNavigation { get; set; } = null!;
 
     public virtual ICollection<PreferenciasCliente> PreferenciasClientes { get; set; } = new List<PreferenciasCliente>();
 

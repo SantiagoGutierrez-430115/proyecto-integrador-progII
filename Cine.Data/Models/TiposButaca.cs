@@ -9,5 +9,7 @@ public partial class TiposButaca
 
     public string TipoButaca { get; set; } = null!;
 
+    public virtual AdicionalesButaca? AdicionalesButaca { get; set; }
+
     public virtual ICollection<Butaca> Butacas { get; set; } = new List<Butaca>();
 }
