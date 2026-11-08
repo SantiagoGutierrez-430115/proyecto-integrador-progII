@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Cine.Data/Cine.Data.csproj" />
+  <Project Path="TPI_Cine/TPI_Cine.csproj" />
+</Solution>
