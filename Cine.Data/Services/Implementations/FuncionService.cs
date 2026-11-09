@@ -124,6 +124,55 @@ namespace Cine.Data.Services.Implementations
             }).ToList();
         }
 
+        public async Task<List<ButacaFuncionDto>?> ObtenerButacasPorFuncionAsync(int idFuncion)
+        {
+            var butacas = await repo.ObtenerButacasPorFuncionAsync(idFuncion);
 
+            if (butacas is null)
+            {
+                return null;
+            }
+
+            var resultado = new List<ButacaFuncionDto>();
+
+            if (butacas.Count == 0)
+            {
+                return resultado;
+            }
+
+            var idSala = butacas[0].IdSala;
+            var tarifa = await repo.ObtenerTarifaSalaAsync(idSala);
+
+            if (tarifa is null)
+            {
+                throw new InvalidOperationException($"Falta configurar la tarifa de la sala {idSala}.");
+            }
+
+            var adicionales = await repo.ObtenerAdicionalesPorTipoButacaAsync();
+            var idsOcupadas = await repo.ObtenerIdsButacasOcupadasAsync(idFuncion);
+
+            foreach (var butaca in butacas)
+            {
+                var adicional = adicionales.FirstOrDefault(
+                    a => a.IdTipoButacas == butaca.IdTipoButacas);
+
+                if (adicional is null)
+                {
+                    throw new InvalidOperationException(
+                        $"Falta configurar el adicional del tipo de butaca {butaca.IdTipoButacas}.");
+                }
+
+                resultado.Add(new ButacaFuncionDto
+                {
+                    IdButaca = butaca.IdButaca,
+                    NroButaca = butaca.NroButaca,
+                    Precio = tarifa.Value + adicional.Adicional,
+                    Disponible = butaca.IdEstadoButacaNavigation.EstadoButaca == "Disponible"
+                        && !idsOcupadas.Contains(butaca.IdButaca)
+                });
+            }
+
+            return resultado;
+        }
     }
 }

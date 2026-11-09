@@ -29,5 +29,12 @@ namespace Cine.Data.Repositories.Interfaces
         Task<List<Funcione>> ListarPorPeliculaAsync(int idPelicula);
 
         Task<List<Funcione>> ListarPorFechaAsync(DateOnly fecha);
+
+        Task<List<Butaca>?> ObtenerButacasPorFuncionAsync(int idFuncion);
+
+        Task<List<int>> ObtenerIdsButacasOcupadasAsync(int idFuncion);
+
+        Task<decimal?> ObtenerTarifaSalaAsync(int idSala);
+        Task<List<AdicionalesButaca>> ObtenerAdicionalesPorTipoButacaAsync();
     }
 }

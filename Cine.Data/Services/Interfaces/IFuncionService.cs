@@ -18,5 +18,7 @@ namespace Cine.Data.Services.Interfaces
         Task<List<FuncionDto>> ListarPorPeliculaAsync(int idPelicula);
 
         Task<List<FuncionDto>> ListarPorFechaAsync(DateOnly fecha);
+
+        Task<List<ButacaFuncionDto>?> ObtenerButacasPorFuncionAsync(int idFuncion);
     }
 }

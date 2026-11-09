@@ -75,5 +75,24 @@ namespace TPI_Cine.Controllers
 
             return Ok(funciones);
         }
+
+        [AllowAnonymous]
+        [HttpGet("~/api/funciones/{idFuncion}/butacas")]
+        public async Task<IActionResult> ObtenerButacas([FromRoute] int idFuncion)
+        {
+            if (idFuncion <= 0)
+            {
+                return BadRequest("El ID de la función debe ser mayor a cero.");
+            }
+
+            var butacas = await serv.ObtenerButacasPorFuncionAsync(idFuncion);
+
+            if (butacas is null)
+            {
+                return NotFound("La función indicada no existe.");
+            }
+
+            return Ok(butacas);
+        }
     }
 }
