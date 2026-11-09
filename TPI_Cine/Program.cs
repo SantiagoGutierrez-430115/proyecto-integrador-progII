@@ -51,6 +51,9 @@ builder.Services.AddDbContext<CineDbContext>(options =>
 // Inyecciones de dependencia
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+builder.Services.AddScoped<IFuncionRepository, FuncionRepository>();
+builder.Services.AddScoped<IFuncionService, FuncionService>();
+
 
 // Inyección de configuración JWT
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
