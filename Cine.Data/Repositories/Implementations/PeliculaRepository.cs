@@ -1,3 +1,4 @@
+using Cine.Data.DTOs;
 using Cine.Data.Models;
 using Cine.Data.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -25,11 +26,12 @@ namespace Cine.Data.Repositories.Implementations
                 .Include(p => p.PeliculasActores).ThenInclude(x => x.IdActorNavigation)
                 .AsSplitQuery();
 
-        public async Task<(List<Pelicula> Items, int Total)> GetAllAsync(
+        public async Task<ResultadoPaginadoDto<Pelicula>> GetAllAsync(
             string? titulo, int? idGenero, int? idClasificacion, int pagina, int tamanio)
         {
-            var query = _context.Peliculas.AsQueryable();
+            var query = ConDetalle();
 
+            // Filtros opcionales
             if (!string.IsNullOrWhiteSpace(titulo))
                 query = query.Where(p => p.Titulo.Contains(titulo));
             if (idGenero.HasValue)
@@ -37,21 +39,23 @@ namespace Cine.Data.Repositories.Implementations
             if (idClasificacion.HasValue)
                 query = query.Where(p => p.IdClasificacion == idClasificacion.Value);
 
+            // Total de películas que cumplen los filtros (antes de paginar)
             var total = await query.CountAsync();
 
-            var ids = await query
+            // Paginación: se saltean las películas de las páginas anteriores y se toman las de esta
+            var items = await query
                 .OrderBy(p => p.Titulo).ThenBy(p => p.IdPelicula)
                 .Skip((pagina - 1) * tamanio)
                 .Take(tamanio)
-                .Select(p => p.IdPelicula)
                 .ToListAsync();
 
-            var items = await ConDetalle()
-                .Where(p => ids.Contains(p.IdPelicula))
-                .OrderBy(p => p.Titulo).ThenBy(p => p.IdPelicula)
-                .ToListAsync();
-
-            return (items, total);
+            return new ResultadoPaginadoDto<Pelicula>
+            {
+                Items = items,
+                Total = total,
+                Pagina = pagina,
+                Tamanio = tamanio
+            };
         }
 
         public Task<Pelicula?> GetByIdAsync(int id) =>

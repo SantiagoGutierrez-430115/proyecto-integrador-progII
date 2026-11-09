@@ -1,4 +1,5 @@
 using Cine.Data.DTOs;
+using Cine.Data.Exceptions;
 using Cine.Data.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,13 +19,14 @@ namespace TPI_Cine.Controllers
 
         // GET api/pelicula?titulo=avatar&idGenero=2&idClasificacion=1&pagina=1&tamanio=10
         [HttpGet]
-        public async Task<ActionResult<ResultadoPaginadoDto<PeliculaDto>>> GetAll(
+        public async Task<IActionResult> GetAll(
             [FromQuery] string? titulo, [FromQuery] int? idGenero, [FromQuery] int? idClasificacion,
             [FromQuery] int pagina = 1, [FromQuery] int tamanio = 10)
         {
             try
             {
-                return Ok(await _peliculaService.GetAllAsync(titulo, idGenero, idClasificacion, pagina, tamanio));
+                var resultado = await _peliculaService.GetAllAsync(titulo, idGenero, idClasificacion, pagina, tamanio);
+                return Ok(resultado);
             }
             catch (Exception ex)
             {
@@ -33,12 +35,17 @@ namespace TPI_Cine.Controllers
         }
 
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<PeliculaDto>> GetById(int id)
+        public async Task<IActionResult> GetById(int id)
         {
             try
             {
                 var pelicula = await _peliculaService.GetByIdAsync(id);
-                return pelicula == null ? NotFound($"No existe la película {id}.") : Ok(pelicula);
+                if (pelicula == null)
+                {
+                    return NotFound($"No existe la película {id}.");
+                }
+
+                return Ok(pelicula);
             }
             catch (Exception ex)
             {
@@ -52,13 +59,16 @@ namespace TPI_Cine.Controllers
         {
             try
             {
-                var (resultado, error, pelicula) = await _peliculaService.CreateAsync(dto);
-                return resultado switch
-                {
-                    ResultadoPelicula.Ok => CreatedAtAction(nameof(GetById), new { id = pelicula!.IdPelicula }, pelicula),
-                    ResultadoPelicula.Duplicada => Conflict(error),
-                    _ => BadRequest(error)
-                };
+                var pelicula = await _peliculaService.CreateAsync(dto);
+                return CreatedAtAction(nameof(GetById), new { id = pelicula.IdPelicula }, pelicula);
+            }
+            catch (DatosInvalidosException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (ConflictoException ex)
+            {
+                return Conflict(ex.Message);
             }
             catch (Exception ex)
             {
@@ -72,14 +82,21 @@ namespace TPI_Cine.Controllers
         {
             try
             {
-                var (resultado, error) = await _peliculaService.UpdateAsync(id, dto);
-                return resultado switch
+                var actualizada = await _peliculaService.UpdateAsync(id, dto);
+                if (!actualizada)
                 {
-                    ResultadoPelicula.Ok => NoContent(),
-                    ResultadoPelicula.NoEncontrada => NotFound($"No existe la película {id}."),
-                    ResultadoPelicula.Duplicada => Conflict(error),
-                    _ => BadRequest(error)
-                };
+                    return NotFound($"No existe la película {id}.");
+                }
+
+                return NoContent();
+            }
+            catch (DatosInvalidosException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (ConflictoException ex)
+            {
+                return Conflict(ex.Message);
             }
             catch (Exception ex)
             {
@@ -93,14 +110,17 @@ namespace TPI_Cine.Controllers
         {
             try
             {
-                var (resultado, error) = await _peliculaService.DeleteAsync(id);
-                return resultado switch
+                var eliminada = await _peliculaService.DeleteAsync(id);
+                if (!eliminada)
                 {
-                    ResultadoPelicula.Ok => NoContent(),
-                    ResultadoPelicula.NoEncontrada => NotFound($"No existe la película {id}."),
-                    ResultadoPelicula.TieneDependencias => Conflict(error),
-                    _ => BadRequest(error)
-                };
+                    return NotFound($"No existe la película {id}.");
+                }
+
+                return NoContent();
+            }
+            catch (ConflictoException ex)
+            {
+                return Conflict(ex.Message);
             }
             catch (Exception ex)
             {

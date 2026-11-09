@@ -1,4 +1,5 @@
 using Cine.Data.DTOs;
+using Cine.Data.Exceptions;
 using Cine.Data.Models;
 using Cine.Data.Repositories.Interfaces;
 using Cine.Data.Services.Interfaces;
@@ -17,15 +18,24 @@ namespace Cine.Data.Services.Implementations
         public async Task<ResultadoPaginadoDto<PeliculaDto>> GetAllAsync(
             string? titulo, int? idGenero, int? idClasificacion, int pagina, int tamanio)
         {
-            pagina = Math.Max(1, pagina);
-            tamanio = Math.Clamp(tamanio, 1, 100);
+            // La página mínima es 1, y el tamaño tiene que estar entre 1 y 100
+            if (pagina < 1) pagina = 1;
+            if (tamanio < 1) tamanio = 1;
+            if (tamanio > 100) tamanio = 100;
 
-            var (items, total) = await _repo.GetAllAsync(titulo, idGenero, idClasificacion, pagina, tamanio);
+            var resultado = await _repo.GetAllAsync(titulo, idGenero, idClasificacion, pagina, tamanio);
+
+            // Convierte cada Pelicula (entidad) en un PeliculaDto
+            var dtos = new List<PeliculaDto>();
+            foreach (var pelicula in resultado.Items)
+            {
+                dtos.Add(ToDto(pelicula));
+            }
 
             return new ResultadoPaginadoDto<PeliculaDto>
             {
-                Items = items.Select(ToDto).ToList(),
-                Total = total,
+                Items = dtos,
+                Total = resultado.Total,
                 Pagina = pagina,
                 Tamanio = tamanio
             };
@@ -33,93 +43,108 @@ namespace Cine.Data.Services.Implementations
 
         public async Task<PeliculaDto?> GetByIdAsync(int id)
         {
-            var p = await _repo.GetByIdAsync(id);
-            return p == null ? null : ToDto(p);
+            var pelicula = await _repo.GetByIdAsync(id);
+            if (pelicula == null) return null;
+
+            return ToDto(pelicula);
         }
 
-        public async Task<(ResultadoPelicula, string?, PeliculaDto?)> CreateAsync(GuardarPeliculaDto dto)
+        public async Task<PeliculaDto> CreateAsync(GuardarPeliculaDto dto)
         {
             var pelicula = ToEntity(dto);
 
             var error = await _repo.ValidarReferenciasAsync(pelicula, dto.IdsGeneros, dto.IdsIdiomas, dto.IdsActores);
-            if (error != null) return (ResultadoPelicula.Invalida, error, null);
+            if (error != null)
+                throw new DatosInvalidosException(error);
 
             if (await _repo.ExisteTituloAsync(pelicula.Titulo, pelicula.FechaLanzamiento))
-                return (ResultadoPelicula.Duplicada, "Ya existe una película con ese título y fecha de lanzamiento.", null);
+                throw new ConflictoException("Ya existe una película con ese título y fecha de lanzamiento.");
 
             var creada = await _repo.CreateAsync(pelicula, dto.IdsGeneros, dto.IdsIdiomas, dto.IdsActores);
+
+            // Se vuelve a leer para devolver la película con país, director, géneros, etc.
             var completa = await _repo.GetByIdAsync(creada.IdPelicula);
-            return (ResultadoPelicula.Ok, null, completa == null ? null : ToDto(completa));
+            return ToDto(completa!);
         }
 
-        public async Task<(ResultadoPelicula, string?)> UpdateAsync(int id, GuardarPeliculaDto dto)
+        public async Task<bool> UpdateAsync(int id, GuardarPeliculaDto dto)
         {
-            if (await _repo.GetByIdAsync(id) == null)
-                return (ResultadoPelicula.NoEncontrada, null);
+            var existente = await _repo.GetByIdAsync(id);
+            if (existente == null) return false;
 
             var datos = ToEntity(dto);
 
             var error = await _repo.ValidarReferenciasAsync(datos, dto.IdsGeneros, dto.IdsIdiomas, dto.IdsActores);
-            if (error != null) return (ResultadoPelicula.Invalida, error);
+            if (error != null)
+                throw new DatosInvalidosException(error);
 
             if (await _repo.ExisteTituloAsync(datos.Titulo, datos.FechaLanzamiento, id))
-                return (ResultadoPelicula.Duplicada, "Ya existe otra película con ese título y fecha de lanzamiento.");
+                throw new ConflictoException("Ya existe otra película con ese título y fecha de lanzamiento.");
 
-            var ok = await _repo.UpdateAsync(id, datos, dto.IdsGeneros, dto.IdsIdiomas, dto.IdsActores);
-            return ok ? (ResultadoPelicula.Ok, null) : (ResultadoPelicula.NoEncontrada, null);
+            return await _repo.UpdateAsync(id, datos, dto.IdsGeneros, dto.IdsIdiomas, dto.IdsActores);
         }
 
-        public async Task<(ResultadoPelicula, string?)> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id)
         {
-            if (await _repo.GetByIdAsync(id) == null)
-                return (ResultadoPelicula.NoEncontrada, null);
+            var existente = await _repo.GetByIdAsync(id);
+            if (existente == null) return false;
 
             if (await _repo.TieneDependenciasAsync(id))
-                return (ResultadoPelicula.TieneDependencias,
-                    "No se puede eliminar: la película tiene funciones o reseñas asociadas.");
+                throw new ConflictoException("No se puede eliminar: la película tiene funciones o reseñas asociadas.");
 
-            var ok = await _repo.DeleteAsync(id);
-            return ok ? (ResultadoPelicula.Ok, null) : (ResultadoPelicula.NoEncontrada, null);
+            return await _repo.DeleteAsync(id);
         }
 
-        private static Pelicula ToEntity(GuardarPeliculaDto dto) => new()
+        // Pasa los datos que llegan (DTO) a una entidad de la base
+        private static Pelicula ToEntity(GuardarPeliculaDto dto)
         {
-            Titulo = dto.Titulo.Trim(),
-            Descripcion = string.IsNullOrWhiteSpace(dto.Descripcion) ? null : dto.Descripcion.Trim(),
-            FechaLanzamiento = dto.FechaLanzamiento!.Value,
-            IdPais = dto.IdPais,
-            IdFormatoPelicula = dto.IdFormatoPelicula,
-            IdClasificacion = dto.IdClasificacion,
-            IdDistribuidor = dto.IdDistribuidor,
-            IdDirector = dto.IdDirector
-        };
+            return new Pelicula
+            {
+                Titulo = dto.Titulo.Trim(),
+                Descripcion = string.IsNullOrWhiteSpace(dto.Descripcion) ? null : dto.Descripcion.Trim(),
+                FechaLanzamiento = dto.FechaLanzamiento!.Value,
+                IdPais = dto.IdPais,
+                IdFormatoPelicula = dto.IdFormatoPelicula,
+                IdClasificacion = dto.IdClasificacion,
+                IdDistribuidor = dto.IdDistribuidor,
+                IdDirector = dto.IdDirector
+            };
+        }
 
-        private static PeliculaDto ToDto(Pelicula p) => new()
+        // Pasa una entidad de la base a lo que se devuelve en la API (DTO)
+        private static PeliculaDto ToDto(Pelicula p)
         {
-            IdPelicula = p.IdPelicula,
-            Titulo = p.Titulo,
-            Descripcion = p.Descripcion,
-            FechaLanzamiento = p.FechaLanzamiento,
-            IdPais = p.IdPais,
-            Pais = p.IdPaisNavigation?.Pais,
-            IdFormatoPelicula = p.IdFormatoPelicula,
-            Formato = p.IdFormatoPeliculaNavigation?.Formato,
-            IdClasificacion = p.IdClasificacion,
-            Clasificacion = p.IdClasificacionNavigation?.Clasificacion,
-            IdDistribuidor = p.IdDistribuidor,
-            Distribuidor = p.IdDistribuidorNavigation?.Distribuidor,
-            IdDirector = p.IdDirector,
-            Director = p.IdDirectorNavigation == null ? null
-                : $"{p.IdDirectorNavigation.Nombre} {p.IdDirectorNavigation.Apellido}",
-            Generos = p.PeliculasGeneros
-                .Select(x => new ItemDto { Id = x.IdGenero, Nombre = x.IdGeneroNavigation.Genero1 })
-                .OrderBy(x => x.Nombre).ToList(),
-            Idiomas = p.PeliculasIdiomas
-                .Select(x => new ItemDto { Id = x.IdIdioma, Nombre = x.IdIdiomaNavigation.Idioma1 })
-                .OrderBy(x => x.Nombre).ToList(),
-            Actores = p.PeliculasActores
-                .Select(x => new ItemDto { Id = x.IdActor, Nombre = $"{x.IdActorNavigation.Nombre} {x.IdActorNavigation.Apellido}" })
-                .OrderBy(x => x.Nombre).ToList()
-        };
+            return new PeliculaDto
+            {
+                IdPelicula = p.IdPelicula,
+                Titulo = p.Titulo,
+                Descripcion = p.Descripcion,
+                FechaLanzamiento = p.FechaLanzamiento,
+                IdPais = p.IdPais,
+                Pais = p.IdPaisNavigation?.Pais,
+                IdFormatoPelicula = p.IdFormatoPelicula,
+                Formato = p.IdFormatoPeliculaNavigation?.Formato,
+                IdClasificacion = p.IdClasificacion,
+                Clasificacion = p.IdClasificacionNavigation?.Clasificacion,
+                IdDistribuidor = p.IdDistribuidor,
+                Distribuidor = p.IdDistribuidorNavigation?.Distribuidor,
+                IdDirector = p.IdDirector,
+                Director = p.IdDirectorNavigation == null
+                    ? null
+                    : p.IdDirectorNavigation.Nombre + " " + p.IdDirectorNavigation.Apellido,
+                Generos = p.PeliculasGeneros
+                    .Select(x => new ItemDto { Id = x.IdGenero, Nombre = x.IdGeneroNavigation.Genero1 })
+                    .OrderBy(x => x.Nombre)
+                    .ToList(),
+                Idiomas = p.PeliculasIdiomas
+                    .Select(x => new ItemDto { Id = x.IdIdioma, Nombre = x.IdIdiomaNavigation.Idioma1 })
+                    .OrderBy(x => x.Nombre)
+                    .ToList(),
+                Actores = p.PeliculasActores
+                    .Select(x => new ItemDto { Id = x.IdActor, Nombre = x.IdActorNavigation.Nombre + " " + x.IdActorNavigation.Apellido })
+                    .OrderBy(x => x.Nombre)
+                    .ToList()
+            };
+        }
     }
 }

@@ -1,10 +1,9 @@
-using Cine.Data.DTOs;
-using Cine.Data.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Cine.Data.Repositories.Interfaces;
 
 namespace TPI_Cine.Controllers
 {
-    // Listas para llenar los desplegables del front. Públicas y de solo lectura.
+    // Listas (id + nombre) para llenar los desplegables del front. Públicas y de solo lectura.
     [Route("api/[controller]")]
     [ApiController]
     public class CatalogoController : ControllerBase
@@ -17,38 +16,114 @@ namespace TPI_Cine.Controllers
         }
 
         [HttpGet("paises")]
-        public Task<ActionResult<List<ItemDto>>> Paises() => Responder(_catalogo.GetPaisesAsync);
-
-        [HttpGet("formatos")]
-        public Task<ActionResult<List<ItemDto>>> Formatos() => Responder(_catalogo.GetFormatosAsync);
-
-        [HttpGet("clasificaciones")]
-        public Task<ActionResult<List<ItemDto>>> Clasificaciones() => Responder(_catalogo.GetClasificacionesAsync);
-
-        [HttpGet("distribuidores")]
-        public Task<ActionResult<List<ItemDto>>> Distribuidores() => Responder(_catalogo.GetDistribuidoresAsync);
-
-        [HttpGet("directores")]
-        public Task<ActionResult<List<ItemDto>>> Directores() => Responder(_catalogo.GetDirectoresAsync);
-
-        [HttpGet("generos")]
-        public Task<ActionResult<List<ItemDto>>> Generos() => Responder(_catalogo.GetGenerosAsync);
-
-        [HttpGet("idiomas")]
-        public Task<ActionResult<List<ItemDto>>> Idiomas() => Responder(_catalogo.GetIdiomasAsync);
-
-        [HttpGet("actores")]
-        public Task<ActionResult<List<ItemDto>>> Actores() => Responder(_catalogo.GetActoresAsync);
-
-        private async Task<ActionResult<List<ItemDto>>> Responder(Func<Task<List<ItemDto>>> obtener)
+        public async Task<IActionResult> Paises()
         {
             try
             {
-                return Ok(await obtener());
+                var lista = await _catalogo.GetPaisesAsync();
+                return Ok(lista);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Ocurrió un error al obtener el catálogo: {ex.Message}");
+                return StatusCode(500, $"Ocurrió un error al obtener los países: {ex.Message}");
+            }
+        }
+
+        [HttpGet("formatos")]
+        public async Task<IActionResult> Formatos()
+        {
+            try
+            {
+                var lista = await _catalogo.GetFormatosAsync();
+                return Ok(lista);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Ocurrió un error al obtener los formatos: {ex.Message}");
+            }
+        }
+
+        [HttpGet("clasificaciones")]
+        public async Task<IActionResult> Clasificaciones()
+        {
+            try
+            {
+                var lista = await _catalogo.GetClasificacionesAsync();
+                return Ok(lista);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Ocurrió un error al obtener las clasificaciones: {ex.Message}");
+            }
+        }
+
+        [HttpGet("distribuidores")]
+        public async Task<IActionResult> Distribuidores()
+        {
+            try
+            {
+                var lista = await _catalogo.GetDistribuidoresAsync();
+                return Ok(lista);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Ocurrió un error al obtener los distribuidores: {ex.Message}");
+            }
+        }
+
+        [HttpGet("directores")]
+        public async Task<IActionResult> Directores()
+        {
+            try
+            {
+                var lista = await _catalogo.GetDirectoresAsync();
+                return Ok(lista);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Ocurrió un error al obtener los directores: {ex.Message}");
+            }
+        }
+
+        [HttpGet("generos")]
+        public async Task<IActionResult> Generos()
+        {
+            try
+            {
+                var lista = await _catalogo.GetGenerosAsync();
+                return Ok(lista);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Ocurrió un error al obtener los géneros: {ex.Message}");
+            }
+        }
+
+        [HttpGet("idiomas")]
+        public async Task<IActionResult> Idiomas()
+        {
+            try
+            {
+                var lista = await _catalogo.GetIdiomasAsync();
+                return Ok(lista);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Ocurrió un error al obtener los idiomas: {ex.Message}");
+            }
+        }
+
+        [HttpGet("actores")]
+        public async Task<IActionResult> Actores()
+        {
+            try
+            {
+                var lista = await _catalogo.GetActoresAsync();
+                return Ok(lista);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Ocurrió un error al obtener los actores: {ex.Message}");
             }
         }
     }

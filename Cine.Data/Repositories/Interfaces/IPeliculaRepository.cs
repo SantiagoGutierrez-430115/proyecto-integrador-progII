@@ -1,10 +1,11 @@
+using Cine.Data.DTOs;
 using Cine.Data.Models;
 
 namespace Cine.Data.Repositories.Interfaces
 {
     public interface IPeliculaRepository
     {
-        Task<(List<Pelicula> Items, int Total)> GetAllAsync(string? titulo, int? idGenero, int? idClasificacion, int pagina, int tamanio);
+        Task<ResultadoPaginadoDto<Pelicula>> GetAllAsync(string? titulo, int? idGenero, int? idClasificacion, int pagina, int tamanio);
         Task<Pelicula?> GetByIdAsync(int id);
         Task<bool> ExisteTituloAsync(string titulo, DateOnly fechaLanzamiento, int? excluirId = null);
         Task<bool> TieneDependenciasAsync(int id);
