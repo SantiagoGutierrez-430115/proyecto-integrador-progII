@@ -29,20 +29,10 @@ builder.Services.AddSwaggerGen(c =>
     });
 
     // 2. Aplica el requerimiento de seguridad a nivel global para Swagger
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-    }
-    });
+c.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+{
+    [new OpenApiSecuritySchemeReference("Bearer", document)] = new List<string>()
+});
 });
 
 // Inyección a la base de datos
@@ -54,7 +44,7 @@ builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 
 // Inyección de configuración JWT
-var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+var jwtSettings = builder.Configuration.GetSection("Jwt");
 var secretKey = jwtSettings["Key"] ?? "ClaveDeRespaldoTemporalParaDesarrollo32Chars";
 
 builder.Services.AddAuthentication(options =>
@@ -85,6 +75,8 @@ if (app.Environment.IsDevelopment())
 
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 
