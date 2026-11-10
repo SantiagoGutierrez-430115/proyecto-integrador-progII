@@ -1,3 +1,4 @@
+using Cine.Data.Constants;
 using Cine.Data.DTOs;
 using Cine.Data.Models;
 using Cine.Data.Repositories.Interfaces;
@@ -21,15 +22,20 @@ namespace Cine.Data.Repositories.Implementations
                 .Include(p => p.IdClasificacionNavigation)
                 .Include(p => p.IdDistribuidorNavigation)
                 .Include(p => p.IdDirectorNavigation)
+                .Include(p => p.IdEstadoPeliculaNavigation)
                 .Include(p => p.PeliculasGeneros).ThenInclude(x => x.IdGeneroNavigation)
                 .Include(p => p.PeliculasIdiomas).ThenInclude(x => x.IdIdiomaNavigation)
                 .Include(p => p.PeliculasActores).ThenInclude(x => x.IdActorNavigation)
                 .AsSplitQuery();
 
         public async Task<ResultadoPaginadoDto<Pelicula>> GetAllAsync(
-            string? titulo, int? idGenero, int? idClasificacion, int pagina, int tamanio)
+            string? titulo, int? idGenero, int? idClasificacion, bool incluirInactivas, int pagina, int tamanio)
         {
             var query = ConDetalle();
+
+            // Por defecto solo se ven las películas activas
+            if (!incluirInactivas)
+                query = query.Where(p => p.IdEstadoPeliculaNavigation.Estado == EstadosPeliculaNombres.Activa);
 
             // Filtros opcionales
             if (!string.IsNullOrWhiteSpace(titulo))
@@ -66,10 +72,6 @@ namespace Cine.Data.Repositories.Implementations
                 p.Titulo == titulo &&
                 p.FechaLanzamiento == fechaLanzamiento &&
                 (excluirId == null || p.IdPelicula != excluirId));
-
-        public async Task<bool> TieneDependenciasAsync(int id) =>
-            await _context.Funciones.AnyAsync(f => f.IdPelicula == id) ||
-            await _context.ReseniasPeliculas.AnyAsync(r => r.IdPelicula == id);
 
         public async Task<string?> ValidarReferenciasAsync(
             Pelicula p, IEnumerable<int> generos, IEnumerable<int> idiomas, IEnumerable<int> actores)
@@ -109,6 +111,13 @@ namespace Cine.Data.Repositories.Implementations
                 pelicula.PeliculasIdiomas.Add(new PeliculasIdioma { IdIdioma = id });
             foreach (var id in actores.Distinct())
                 pelicula.PeliculasActores.Add(new PeliculasActore { IdActor = id });
+
+            // Toda película nueva empieza como Activa
+            var activa = await _context.EstadosPeliculas
+                .FirstOrDefaultAsync(e => e.Estado == EstadosPeliculaNombres.Activa);
+            if (activa == null)
+                throw new Exception("No existe el estado 'Activa' en la base de datos. ¿Se ejecutó Script_estado_pelicula.sql?");
+            pelicula.IdEstadoPelicula = activa.IdEstadoPelicula;
 
             // Un solo SaveChanges: EF lo ejecuta en una transacción implícita
             _context.Peliculas.Add(pelicula);
@@ -152,21 +161,16 @@ namespace Cine.Data.Repositories.Implementations
             return true;
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> CambiarEstadoAsync(int id, string estado)
         {
-            var pelicula = await _context.Peliculas
-                .Include(p => p.PeliculasGeneros)
-                .Include(p => p.PeliculasIdiomas)
-                .Include(p => p.PeliculasActores)
-                .FirstOrDefaultAsync(p => p.IdPelicula == id);
-
+            var pelicula = await _context.Peliculas.FirstOrDefaultAsync(p => p.IdPelicula == id);
             if (pelicula == null) return false;
 
-            _context.PeliculasGeneros.RemoveRange(pelicula.PeliculasGeneros);
-            _context.PeliculasIdiomas.RemoveRange(pelicula.PeliculasIdiomas);
-            _context.PeliculasActores.RemoveRange(pelicula.PeliculasActores);
-            _context.Peliculas.Remove(pelicula);
+            var nuevoEstado = await _context.EstadosPeliculas.FirstOrDefaultAsync(e => e.Estado == estado);
+            if (nuevoEstado == null)
+                throw new Exception($"No existe el estado '{estado}' en la base de datos. ¿Se ejecutó Script_estado_pelicula.sql?");
 
+            pelicula.IdEstadoPelicula = nuevoEstado.IdEstadoPelicula;
             await _context.SaveChangesAsync();
             return true;
         }

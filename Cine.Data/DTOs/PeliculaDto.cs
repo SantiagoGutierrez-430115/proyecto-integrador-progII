@@ -18,6 +18,8 @@ namespace Cine.Data.DTOs
         public string? Distribuidor { get; set; }
         public int? IdDirector { get; set; }
         public string? Director { get; set; }
+        public int IdEstadoPelicula { get; set; }
+        public string? Estado { get; set; }
 
         public List<ItemDto> Generos { get; set; } = new();
         public List<ItemDto> Idiomas { get; set; } = new();

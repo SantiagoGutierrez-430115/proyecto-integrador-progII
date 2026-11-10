@@ -1,3 +1,4 @@
+using Cine.Data.Constants;
 using Cine.Data.DTOs;
 using Cine.Data.Exceptions;
 using Cine.Data.Models;
@@ -16,14 +17,14 @@ namespace Cine.Data.Services.Implementations
         }
 
         public async Task<ResultadoPaginadoDto<PeliculaDto>> GetAllAsync(
-            string? titulo, int? idGenero, int? idClasificacion, int pagina, int tamanio)
+            string? titulo, int? idGenero, int? idClasificacion, bool incluirInactivas, int pagina, int tamanio)
         {
             // La página mínima es 1, y el tamaño tiene que estar entre 1 y 100
             if (pagina < 1) pagina = 1;
             if (tamanio < 1) tamanio = 1;
             if (tamanio > 100) tamanio = 100;
 
-            var resultado = await _repo.GetAllAsync(titulo, idGenero, idClasificacion, pagina, tamanio);
+            var resultado = await _repo.GetAllAsync(titulo, idGenero, idClasificacion, incluirInactivas, pagina, tamanio);
 
             // Convierte cada Pelicula (entidad) en un PeliculaDto
             var dtos = new List<PeliculaDto>();
@@ -41,10 +42,14 @@ namespace Cine.Data.Services.Implementations
             };
         }
 
-        public async Task<PeliculaDto?> GetByIdAsync(int id)
+        public async Task<PeliculaDto?> GetByIdAsync(int id, bool incluirInactivas)
         {
             var pelicula = await _repo.GetByIdAsync(id);
             if (pelicula == null) return null;
+
+            // Una película inactiva solo la ve quien lo pidió (el Admin)
+            if (!incluirInactivas && pelicula.IdEstadoPeliculaNavigation.Estado != EstadosPeliculaNombres.Activa)
+                return null;
 
             return ToDto(pelicula);
         }
@@ -84,15 +89,14 @@ namespace Cine.Data.Services.Implementations
             return await _repo.UpdateAsync(id, datos, dto.IdsGeneros, dto.IdsIdiomas, dto.IdsActores);
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> DarDeBajaAsync(int id)
         {
-            var existente = await _repo.GetByIdAsync(id);
-            if (existente == null) return false;
+            return await _repo.CambiarEstadoAsync(id, EstadosPeliculaNombres.Inactiva);
+        }
 
-            if (await _repo.TieneDependenciasAsync(id))
-                throw new ConflictoException("No se puede eliminar: la película tiene funciones o reseñas asociadas.");
-
-            return await _repo.DeleteAsync(id);
+        public async Task<bool> ReactivarAsync(int id)
+        {
+            return await _repo.CambiarEstadoAsync(id, EstadosPeliculaNombres.Activa);
         }
 
         // Pasa los datos que llegan (DTO) a una entidad de la base
@@ -132,6 +136,8 @@ namespace Cine.Data.Services.Implementations
                 Director = p.IdDirectorNavigation == null
                     ? null
                     : p.IdDirectorNavigation.Nombre + " " + p.IdDirectorNavigation.Apellido,
+                IdEstadoPelicula = p.IdEstadoPelicula,
+                Estado = p.IdEstadoPeliculaNavigation?.Estado,
                 Generos = p.PeliculasGeneros
                     .Select(x => new ItemDto { Id = x.IdGenero, Nombre = x.IdGeneroNavigation.Genero1 })
                     .OrderBy(x => x.Nombre)

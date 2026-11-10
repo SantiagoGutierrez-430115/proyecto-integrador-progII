@@ -18,14 +18,18 @@ namespace TPI_Cine.Controllers
         }
 
         // GET api/pelicula?titulo=avatar&idGenero=2&idClasificacion=1&pagina=1&tamanio=10
+        // incluirInactivas=true solo tiene efecto si quien pide es Admin
         [HttpGet]
         public async Task<IActionResult> GetAll(
             [FromQuery] string? titulo, [FromQuery] int? idGenero, [FromQuery] int? idClasificacion,
-            [FromQuery] int pagina = 1, [FromQuery] int tamanio = 10)
+            [FromQuery] bool incluirInactivas = false, [FromQuery] int pagina = 1, [FromQuery] int tamanio = 10)
         {
             try
             {
-                var resultado = await _peliculaService.GetAllAsync(titulo, idGenero, idClasificacion, pagina, tamanio);
+                // Solo el Admin puede ver las películas inactivas
+                var verInactivas = incluirInactivas && User.IsInRole("Admin");
+
+                var resultado = await _peliculaService.GetAllAsync(titulo, idGenero, idClasificacion, verInactivas, pagina, tamanio);
                 return Ok(resultado);
             }
             catch (Exception ex)
@@ -39,7 +43,7 @@ namespace TPI_Cine.Controllers
         {
             try
             {
-                var pelicula = await _peliculaService.GetByIdAsync(id);
+                var pelicula = await _peliculaService.GetByIdAsync(id, User.IsInRole("Admin"));
                 if (pelicula == null)
                 {
                     return NotFound($"No existe la película {id}.");
@@ -104,27 +108,45 @@ namespace TPI_Cine.Controllers
             }
         }
 
+        // Baja lógica: la película no se borra, queda como Inactiva
         [HttpDelete("{id:int}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             try
             {
-                var eliminada = await _peliculaService.DeleteAsync(id);
-                if (!eliminada)
+                var dadaDeBaja = await _peliculaService.DarDeBajaAsync(id);
+                if (!dadaDeBaja)
                 {
                     return NotFound($"No existe la película {id}.");
                 }
 
                 return NoContent();
             }
-            catch (ConflictoException ex)
+            catch (Exception ex)
             {
-                return Conflict(ex.Message);
+                return StatusCode(500, $"Ocurrió un error al dar de baja la película: {ex.Message}");
+            }
+        }
+
+        // Vuelve a dejar la película como Activa
+        [HttpPut("{id:int}/reactivar")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Reactivar(int id)
+        {
+            try
+            {
+                var reactivada = await _peliculaService.ReactivarAsync(id);
+                if (!reactivada)
+                {
+                    return NotFound($"No existe la película {id}.");
+                }
+
+                return NoContent();
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Ocurrió un error al eliminar la película: {ex.Message}");
+                return StatusCode(500, $"Ocurrió un error al reactivar la película: {ex.Message}");
             }
         }
     }
