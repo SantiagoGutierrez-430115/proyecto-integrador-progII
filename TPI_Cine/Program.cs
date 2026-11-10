@@ -51,12 +51,15 @@ builder.Services.AddDbContext<CineDbContext>(options =>
 // Inyecciones de dependencia
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+builder.Services.AddScoped<IPeliculaRepository, PeliculaRepository>();
+builder.Services.AddScoped<IPeliculaService, PeliculaService>();
+builder.Services.AddScoped<ICatalogoRepository, CatalogoRepository>();
 builder.Services.AddScoped<IFuncionRepository, FuncionRepository>();
 builder.Services.AddScoped<IFuncionService, FuncionService>();
 
 
 // Inyección de configuración JWT
-var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+var jwtSettings = builder.Configuration.GetSection("Jwt");
 var secretKey = jwtSettings["Key"] ?? "ClaveDeRespaldoTemporalParaDesarrollo32Chars";
 
 builder.Services.AddAuthentication(options =>
@@ -75,6 +78,14 @@ builder.Services.AddAuthentication(options =>
     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Front", policy => policy
+        .WithOrigins("http://127.0.0.1:5500", "http://localhost:5500")
+        .AllowAnyHeader()
+        .AllowAnyMethod());
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -87,6 +98,10 @@ if (app.Environment.IsDevelopment())
 
 
 app.UseHttpsRedirection();
+
+app.UseCors("Front");
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 
