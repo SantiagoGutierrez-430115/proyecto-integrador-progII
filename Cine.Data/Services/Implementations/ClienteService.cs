@@ -91,8 +91,10 @@ namespace Cine.Data.Services.Implementations
                 Nombre = c.Nombre,
                 Apellido = c.Apellido,
                 NroDoc = c.NroDoc,
-                TipoDocumento = c.IdTipoDocNavigation.Tipo,
-                CorreoElectronico = c.IdUsuarioNavigation.CorreoElectronico
+                // Usar ?. y ?? evita cualquier NullReferenceException si algo llegara a ser nulo
+                CorreoElectronico = c.IdUsuarioNavigation?.CorreoElectronico ?? "Sin correo",
+                TipoDocumento = c.IdTipoDocNavigation?.Tipo ?? "Sin tipo"
+                // Agregá el resto de tus propiedades de la misma forma segura
             };
         }
 

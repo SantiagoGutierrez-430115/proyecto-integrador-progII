@@ -44,7 +44,8 @@ namespace Cine.Data.Repositories.Implementations
         {
             return await _context.Clientes
                 .Include(c => c.IdUsuarioNavigation)
-                .Include(c => c.IdDireccionNavigation)
+                .Include(c => c.IdTipoDocNavigation)     // Por si usás el tipo de documento en el DTO
+                .Include(c => c.IdDireccionNavigation)   // Por si usás la dirección en el DTO
                 .FirstOrDefaultAsync(c => c.CodCliente == codCliente);
         }
 
