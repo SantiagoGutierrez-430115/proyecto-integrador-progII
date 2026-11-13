@@ -54,10 +54,19 @@ builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IPeliculaRepository, PeliculaRepository>();
 builder.Services.AddScoped<IPeliculaService, PeliculaService>();
 builder.Services.AddScoped<ICatalogoRepository, CatalogoRepository>();
+builder.Services.AddScoped<IButacaRepository, ButacaRepository>();
+builder.Services.AddScoped<IButacaService,ButacaService>();
+builder.Services.AddScoped<IFuncionRepository,FuncionRepository>();
+builder.Services.AddScoped<IFuncionService,FuncionService>();
+builder.Services.AddScoped<IReseniaRepository, ReseniaRepository>();
+builder.Services.AddScoped<IReseniaService, ReseniaService>();
 
 // Inyección de configuración JWT
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var secretKey = jwtSettings["Key"] ?? "ClaveDeRespaldoTemporalParaDesarrollo32Chars";
+
+builder.Services.AddAuthorization();
+
 
 builder.Services.AddAuthentication(options =>
 {
