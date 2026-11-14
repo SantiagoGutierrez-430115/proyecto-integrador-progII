@@ -54,6 +54,11 @@ builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<IPeliculaRepository, PeliculaRepository>();
 builder.Services.AddScoped<IPeliculaService, PeliculaService>();
 builder.Services.AddScoped<ICatalogoRepository, CatalogoRepository>();
+builder.Services.AddScoped<IProductoShopRepository, ProductoShopRepository>();
+builder.Services.AddScoped<IProductoShopService, ProductoShopService>();
+builder.Services.AddScoped<IComboRepository, ComboRepository>();
+builder.Services.AddScoped<IComboService, ComboService>();
+
 
 // Inyección de configuración JWT
 var jwtSettings = builder.Configuration.GetSection("Jwt");
