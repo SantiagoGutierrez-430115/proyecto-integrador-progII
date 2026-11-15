@@ -60,6 +60,8 @@ builder.Services.AddScoped<IFuncionRepository,FuncionRepository>();
 builder.Services.AddScoped<IFuncionService,FuncionService>();
 builder.Services.AddScoped<IReseniaRepository, ReseniaRepository>();
 builder.Services.AddScoped<IReseniaService, ReseniaService>();
+builder.Services.AddScoped<ICompraRepository, CompraRepository>();
+builder.Services.AddScoped<ICompraService, CompraService>();
 
 // Inyección de configuración JWT
 var jwtSettings = builder.Configuration.GetSection("Jwt");
