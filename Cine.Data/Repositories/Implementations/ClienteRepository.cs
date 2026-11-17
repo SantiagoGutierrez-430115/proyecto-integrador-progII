@@ -1,11 +1,6 @@
 ﻿using Cine.Data.Models;
 using Cine.Data.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Cine.Data.Repositories.Implementations
 {
@@ -17,42 +12,55 @@ namespace Cine.Data.Repositories.Implementations
             _context = context;
         }
 
-        // Búsqueda de clientes cruzando con usuarios 
-        public async Task<IEnumerable<Cliente>> BuscarClientes(string filtro)
+        // Búsqueda de clientes cruzando con usuarios (nombre, apellido, documento o correo).
+        // AsNoTracking: es solo lectura, EF no necesita seguir los cambios de estas entidades.
+        public async Task<IEnumerable<Cliente>> BuscarClientes(string? filtro)
         {
             var query = _context.Clientes
+                .AsNoTracking()
                 .Include(c => c.IdUsuarioNavigation)
                 .Include(c => c.IdTipoDocNavigation)
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(filtro))
             {
-                filtro = filtro.ToLower();
+                filtro = filtro.Trim();
+                // No hace falta ToLower(): la intercalación por defecto de SQL Server
+                // (..._CI_AS) ya compara sin distinguir mayúsculas/minúsculas.
                 query = query.Where(c =>
-                    c.Nombre.ToLower().Contains(filtro) ||
-                    c.Apellido.ToLower().Contains(filtro) ||
+                    c.Nombre.Contains(filtro) ||
+                    c.Apellido.Contains(filtro) ||
                     c.NroDoc.Contains(filtro) ||
-                    c.IdUsuarioNavigation.CorreoElectronico.ToLower().Contains(filtro) // Columna creada en tu script de usuarios[cite: 6]
+                    c.IdUsuarioNavigation.CorreoElectronico.Contains(filtro)
                 );
             }
 
-            return await query.ToListAsync();
+            return await query
+                .OrderBy(c => c.Apellido)
+                .ThenBy(c => c.Nombre)
+                .ToListAsync();
         }
 
-        // Obtener cliente por ID 
-        public async Task<Cliente?> ObtenerPorId(int? codCliente)
+        // Obtener cliente por ID (con tracking, porque se usa también para actualizar)
+        public async Task<Cliente?> ObtenerPorId(int codCliente)
         {
             return await _context.Clientes
                 .Include(c => c.IdUsuarioNavigation)
-                .Include(c => c.IdTipoDocNavigation)     // Por si usás el tipo de documento en el DTO
-                .Include(c => c.IdDireccionNavigation)   // Por si usás la dirección en el DTO
+                .Include(c => c.IdTipoDocNavigation)
                 .FirstOrDefaultAsync(c => c.CodCliente == codCliente);
         }
 
-        //  Actualizar datos del cliente
+        // Verificación liviana de existencia (no trae el registro completo)
+        public async Task<bool> Existe(int codCliente)
+        {
+            return await _context.Clientes.AnyAsync(c => c.CodCliente == codCliente);
+        }
+
+        // Actualizar datos del cliente.
+        // El cliente ya viene "trackeado" desde ObtenerPorId, así que alcanza con SaveChanges:
+        // EF detecta solo las columnas modificadas (Update() marcaba TODAS como modificadas).
         public async Task Actualizar(Cliente cliente)
         {
-            _context.Clientes.Update(cliente);
             await _context.SaveChangesAsync();
         }
 
@@ -60,6 +68,7 @@ namespace Cine.Data.Repositories.Implementations
         public async Task<IEnumerable<Reserva>> ObtenerReservasPorClienteId(int codCliente)
         {
             return await _context.Reservas
+                .AsNoTracking()
                 .Include(r => r.IdEstadoReservaNavigation)
                 .Include(r => r.IdFuncionNavigation)
                     .ThenInclude(f => f.IdPeliculaNavigation)
@@ -67,17 +76,26 @@ namespace Cine.Data.Repositories.Implementations
                     .ThenInclude(f => f.IdHorarioNavigation)
                 .Include(r => r.IdFuncionNavigation)
                     .ThenInclude(f => f.IdSalaNavigation)
-                .Include(r => r.ReservaDetalles)
-                    .ThenInclude(rd => rd.IdButacaNavigation)
                 .Where(r => r.CodCliente == codCliente)
                 .OrderByDescending(r => r.Fecha)
                 .ToListAsync();
         }
-        // Revisar si el DNI ya esta registrado en otra cuenta
-        public async Task<bool> ExisteDni(string nroDoc, int codClienteExcluido)
+
+        // Revisa si el documento ya está registrado en otro cliente.
+        // En la BD la restricción única es (id_tipo_doc, nro_doc), así que se comparan ambos.
+        public async Task<bool> ExisteDocumento(int idTipoDoc, string nroDoc, int codClienteExcluido)
         {
             return await _context.Clientes
-                .AnyAsync(c => c.NroDoc == nroDoc && c.CodCliente != codClienteExcluido);
+                .AnyAsync(c => c.IdTipoDoc == idTipoDoc
+                            && c.NroDoc == nroDoc
+                            && c.CodCliente != codClienteExcluido);
+        }
+
+        // Revisa si el correo ya lo usa otro usuario (en la BD hay un índice único sobre correo_electronico)
+        public async Task<bool> ExisteCorreo(string correo, int idUsuarioExcluido)
+        {
+            return await _context.Usuarios
+                .AnyAsync(u => u.CorreoElectronico == correo && u.IdUsuario != idUsuarioExcluido);
         }
     }
 }

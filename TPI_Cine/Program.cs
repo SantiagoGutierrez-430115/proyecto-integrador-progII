@@ -55,8 +55,12 @@ builder.Services.AddScoped<IClienteRepository, ClienteRepository>();
 builder.Services.AddScoped<IClienteService, ClienteService>();
 
 // Inyección de configuración JWT
-var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var secretKey = jwtSettings["Key"] ?? "ClaveDeRespaldoTemporalParaDesarrollo32Chars";
+// La sección en appsettings.json se llama "Jwt" (la misma que usa UsuarioService para firmar el token).
+// Antes se leía "JwtSettings", que no existe: se validaba con otra clave y sin Issuer/Audience,
+// por lo que ningún token generado en el login iba a ser aceptado.
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+var secretKey = jwtSettings["Key"]
+    ?? throw new InvalidOperationException("Falta configurar 'Jwt:Key' en appsettings.json.");
 
 builder.Services.AddAuthentication(options =>
 {
@@ -87,6 +91,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// UseAuthentication debe ir ANTES de UseAuthorization: es el que lee el token del header.
+// Sin esta línea, [Authorize] rechaza todas las peticiones con 401.
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
