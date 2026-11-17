@@ -64,6 +64,11 @@ builder.Services.AddScoped<ICompraRepository, CompraRepository>();
 builder.Services.AddScoped<ICompraService, CompraService>();
 builder.Services.AddScoped<IClienteRepository, ClienteRepository>();
 builder.Services.AddScoped<IClienteService, ClienteService>();
+builder.Services.AddScoped<IProductoShopRepository, ProductoShopRepository>();
+builder.Services.AddScoped<IProductoShopService, ProductoShopService>();
+builder.Services.AddScoped<IComboRepository, ComboRepository>();
+builder.Services.AddScoped<IComboService, ComboService>();
+
 
 // Inyección de configuración JWT
 // La sección en appsettings.json se llama "Jwt" (la misma que usa UsuarioService para firmar el token).
