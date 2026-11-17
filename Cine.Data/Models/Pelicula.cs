@@ -21,6 +21,8 @@ public partial class Pelicula
 
     public int? IdDistribuidor { get; set; }
 
+    public int IdEstadoPelicula { get; set; }
+
     public int? IdDirector { get; set; }
 
     public virtual ICollection<Funcione> Funciones { get; set; } = new List<Funcione>();
@@ -30,6 +32,8 @@ public partial class Pelicula
     public virtual Directore? IdDirectorNavigation { get; set; }
 
     public virtual Distribuidore? IdDistribuidorNavigation { get; set; }
+
+    public virtual EstadosPelicula IdEstadoPeliculaNavigation { get; set; } = null!;
 
     public virtual FormatosPelicula? IdFormatoPeliculaNavigation { get; set; }
 

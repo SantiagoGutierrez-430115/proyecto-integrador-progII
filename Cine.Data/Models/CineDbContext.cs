@@ -57,6 +57,8 @@ public partial class CineDbContext : DbContext
 
     public virtual DbSet<EstadosCompra> EstadosCompras { get; set; }
 
+    public virtual DbSet<EstadosPelicula> EstadosPeliculas { get; set; }
+
     public virtual DbSet<EstadosPromocione> EstadosPromociones { get; set; }
 
     public virtual DbSet<EstadosReserva> EstadosReservas { get; set; }
@@ -646,6 +648,21 @@ public partial class CineDbContext : DbContext
                 .HasColumnName("estado");
         });
 
+        modelBuilder.Entity<EstadosPelicula>(entity =>
+        {
+            entity.HasKey(e => e.IdEstadoPelicula);
+
+            entity.ToTable("estados_peliculas");
+
+            entity.HasIndex(e => e.Estado).IsUnique();
+
+            entity.Property(e => e.IdEstadoPelicula).HasColumnName("id_estado_pelicula");
+            entity.Property(e => e.Estado)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasColumnName("estado");
+        });
+
         modelBuilder.Entity<EstadosPromocione>(entity =>
         {
             entity.HasKey(e => e.IdEstadoPromocion).HasName("PK__estados___7D52EFBF4ED6881C");
@@ -942,6 +959,9 @@ public partial class CineDbContext : DbContext
             entity.Property(e => e.IdClasificacion).HasColumnName("id_clasificacion");
             entity.Property(e => e.IdDirector).HasColumnName("id_director");
             entity.Property(e => e.IdDistribuidor).HasColumnName("id_distribuidor");
+            entity.Property(e => e.IdEstadoPelicula)
+                .HasDefaultValue(1)
+                .HasColumnName("id_estado_pelicula");
             entity.Property(e => e.IdFormatoPelicula).HasColumnName("id_formato_pelicula");
             entity.Property(e => e.IdPais).HasColumnName("id_pais");
             entity.Property(e => e.Titulo)
@@ -960,6 +980,11 @@ public partial class CineDbContext : DbContext
             entity.HasOne(d => d.IdDistribuidorNavigation).WithMany(p => p.Peliculas)
                 .HasForeignKey(d => d.IdDistribuidor)
                 .HasConstraintName("FK_peliculas_distribuidores");
+
+            entity.HasOne(d => d.IdEstadoPeliculaNavigation).WithMany(p => p.Peliculas)
+                .HasForeignKey(d => d.IdEstadoPelicula)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_peliculas_estados_peliculas");
 
             entity.HasOne(d => d.IdFormatoPeliculaNavigation).WithMany(p => p.Peliculas)
                 .HasForeignKey(d => d.IdFormatoPelicula)

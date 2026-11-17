@@ -51,6 +51,17 @@ builder.Services.AddDbContext<CineDbContext>(options =>
 // Inyecciones de dependencia
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+builder.Services.AddScoped<IPeliculaRepository, PeliculaRepository>();
+builder.Services.AddScoped<IPeliculaService, PeliculaService>();
+builder.Services.AddScoped<ICatalogoRepository, CatalogoRepository>();
+builder.Services.AddScoped<IButacaRepository, ButacaRepository>();
+builder.Services.AddScoped<IButacaService,ButacaService>();
+builder.Services.AddScoped<IFuncionRepository,FuncionRepository>();
+builder.Services.AddScoped<IFuncionService,FuncionService>();
+builder.Services.AddScoped<IReseniaRepository, ReseniaRepository>();
+builder.Services.AddScoped<IReseniaService, ReseniaService>();
+builder.Services.AddScoped<ICompraRepository, CompraRepository>();
+builder.Services.AddScoped<ICompraService, CompraService>();
 builder.Services.AddScoped<IClienteRepository, ClienteRepository>();
 builder.Services.AddScoped<IClienteService, ClienteService>();
 
@@ -61,6 +72,9 @@ builder.Services.AddScoped<IClienteService, ClienteService>();
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var secretKey = jwtSettings["Key"]
     ?? throw new InvalidOperationException("Falta configurar 'Jwt:Key' en appsettings.json.");
+
+builder.Services.AddAuthorization();
+
 
 builder.Services.AddAuthentication(options =>
 {
@@ -78,6 +92,14 @@ builder.Services.AddAuthentication(options =>
     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Front", policy => policy
+        .WithOrigins("http://127.0.0.1:5500", "http://localhost:5500")
+        .AllowAnyHeader()
+        .AllowAnyMethod());
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -91,9 +113,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// UseAuthentication debe ir ANTES de UseAuthorization: es el que lee el token del header.
-// Sin esta línea, [Authorize] rechaza todas las peticiones con 401.
+app.UseCors("Front");
+
 app.UseAuthentication();
+
 app.UseAuthorization();
 
 app.MapControllers();
