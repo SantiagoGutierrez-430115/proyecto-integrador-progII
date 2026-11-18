@@ -10,7 +10,9 @@ namespace Cine.Data.Repositories.Interfaces
     public interface IUsuarioRepository
     {
         Task<Usuario?> GetUsuarioByEmailAsync(string email);
+        Task<Usuario?> GetUsuarioByName(string nombreUsuario);
         Task<Role?> GetRoleByNameAsync(string rolName);
         Task<bool> RegisterUserAndClientAsync(Usuario usuario, Cliente cliente);
+        Task<bool> RegisterAdmin(Usuario usuario);
     }
 }

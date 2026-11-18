@@ -114,5 +114,34 @@ namespace Cine.Data.Services.Implementations
 
             return await _usuarioRepository.RegisterUserAndClientAsync(usuario, cliente);
         }
+
+        public async Task<bool> RegisterAdminAsync(RegistroAdminDto registroAdminDto)
+        {
+            if (await _usuarioRepository.GetUsuarioByEmailAsync(registroAdminDto.CorreoElectronico) != null)
+            {
+                return false; // El correo electrónico ya está en uso
+            }
+
+            if (await _usuarioRepository.GetUsuarioByName(registroAdminDto.NombreUsuario) != null)
+            {
+                return false; // El nombre de usuario ya está en uso
+            }
+
+            var rolAdmin = await _usuarioRepository.GetRoleByNameAsync("Admin");
+            if (rolAdmin == null)
+            {
+                throw new Exception("No se encontró el rol 'Admin' en la base de datos.");
+            }
+
+            var usuario = new Usuario
+            {
+                NombreUsuario = registroAdminDto.NombreUsuario,
+                CorreoElectronico = registroAdminDto.CorreoElectronico,
+                Contraseña = BCrypt.Net.BCrypt.HashPassword(registroAdminDto.Contraseña),
+                IdRol = rolAdmin.IdRol
+            };
+
+            return await _usuarioRepository.RegisterAdmin(usuario);
+        }
     }
 }

@@ -28,6 +28,18 @@ namespace Cine.Data.Repositories.Implementations
             return await _context.Usuarios.Include(x => x.Rol).FirstOrDefaultAsync(x => x.CorreoElectronico == email);
         }
 
+        public async Task<Usuario?> GetUsuarioByName(string nombreUsuario)
+        {
+            return await _context.Usuarios.Include(x => x.Rol).FirstOrDefaultAsync(x => x.NombreUsuario == nombreUsuario);
+        }
+
+        public async Task<bool> RegisterAdmin(Usuario usuario)
+        {
+            await _context.Usuarios.AddAsync(usuario);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         public async Task<bool> RegisterUserAndClientAsync(Usuario usuario, Cliente cliente)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();

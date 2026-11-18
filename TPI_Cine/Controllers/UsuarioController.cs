@@ -1,5 +1,6 @@
 ﻿using Cine.Data.DTOs;
 using Cine.Data.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -54,6 +55,26 @@ namespace TPI_Cine.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, $"Ocurrió un error al iniciar sesión: {ex.Message}");
+            }
+        }
+
+        [HttpPost("registro-admin")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> RegistroAdmin([FromBody] RegistroAdminDto registerAdminDto)
+        {
+            try
+            {
+                var result = await _usuarioService.RegisterAdminAsync(registerAdminDto);
+                if (!result)
+                {
+                    return BadRequest("Error al registrar el administrador.");
+                }
+
+                return Ok("Administrador registrado correctamente.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Ocurrió un error al registrar el administrador: {ex.Message}");
             }
         }
     }

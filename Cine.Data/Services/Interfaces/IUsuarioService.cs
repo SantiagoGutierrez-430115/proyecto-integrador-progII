@@ -11,5 +11,6 @@ namespace Cine.Data.Services.Interfaces
     {
         Task<bool> RegisterAsync(RegisterDto registerDto);
         Task<string?> LoginAsync(LoginDto loginDto);
+        Task<bool> RegisterAdminAsync(RegistroAdminDto registroAdminDto);
     }
 }
