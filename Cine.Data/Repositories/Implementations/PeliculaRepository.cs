@@ -144,6 +144,8 @@ namespace Cine.Data.Repositories.Implementations
             pelicula.IdClasificacion = datos.IdClasificacion;
             pelicula.IdDistribuidor = datos.IdDistribuidor;
             pelicula.IdDirector = datos.IdDirector;
+            pelicula.UrlTrailer = datos.UrlTrailer;
+            // La portada NO se toca acá: se cambia con ActualizarPortadaAsync
 
             // Reemplaza las relaciones N:M
             _context.PeliculasGeneros.RemoveRange(pelicula.PeliculasGeneros);
@@ -159,6 +161,17 @@ namespace Cine.Data.Repositories.Implementations
 
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<(bool Existe, string? PortadaAnterior)> ActualizarPortadaAsync(int id, string? urlPortada)
+        {
+            var pelicula = await _context.Peliculas.FirstOrDefaultAsync(p => p.IdPelicula == id);
+            if (pelicula == null) return (false, null);
+
+            var anterior = pelicula.UrlPortada;
+            pelicula.UrlPortada = urlPortada;
+            await _context.SaveChangesAsync();
+            return (true, anterior);
         }
 
         public async Task<bool> CambiarEstadoAsync(int id, string estado)

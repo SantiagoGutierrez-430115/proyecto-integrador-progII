@@ -25,6 +25,11 @@ public partial class Pelicula
 
     public int? IdDirector { get; set; }
 
+    // Columnas agregadas por Script_portada_trailer.sql
+    public string? UrlPortada { get; set; }
+
+    public string? UrlTrailer { get; set; }
+
     public virtual ICollection<Funcione> Funciones { get; set; } = new List<Funcione>();
 
     public virtual Clasificacione? IdClasificacionNavigation { get; set; }

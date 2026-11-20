@@ -38,6 +38,7 @@ namespace TPI_Cine.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<ActionResult<List<FuncionDto>>> ListarFunciones()
         {
             var funciones = await serv.ListarAsync();
@@ -46,6 +47,7 @@ namespace TPI_Cine.Controllers
         }
 
         [HttpGet("{id}")]
+        [AllowAnonymous]
         public async Task<ActionResult<FuncionDto>> ObtenerFuncion(int id)
         {
             try
@@ -61,13 +63,14 @@ namespace TPI_Cine.Controllers
         }
 
         [HttpGet("pelicula/{idPelicula}")]
+        [AllowAnonymous]
         public async Task<ActionResult<List<FuncionDto>>> ListarPorPelicula(int idPelicula)
         {
             var funciones = await serv.ListarPorPeliculaAsync(idPelicula);
 
             return Ok(funciones);
         }
-
+        [AllowAnonymous]
         [HttpGet("fecha")]
         public async Task<ActionResult<List<FuncionDto>>> ListarPorFecha([FromQuery] DateOnly fecha)
         {

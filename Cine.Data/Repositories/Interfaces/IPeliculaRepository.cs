@@ -17,5 +17,8 @@ namespace Cine.Data.Repositories.Interfaces
 
         // Cambia el estado (Activa / Inactiva). Devuelve false si la película no existe
         Task<bool> CambiarEstadoAsync(int id, string estado);
+
+        // Guarda la ruta de la portada. Devuelve si la película existe y la ruta anterior (para borrar el archivo viejo)
+        Task<(bool Existe, string? PortadaAnterior)> ActualizarPortadaAsync(int id, string? urlPortada);
     }
 }

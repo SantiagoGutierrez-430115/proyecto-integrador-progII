@@ -4,6 +4,7 @@ using Cine.Data.Exceptions;
 using Cine.Data.Models;
 using Cine.Data.Repositories.Interfaces;
 using Cine.Data.Services.Interfaces;
+using System.Text.RegularExpressions;
 
 namespace Cine.Data.Services.Implementations
 {
@@ -99,11 +100,34 @@ namespace Cine.Data.Services.Implementations
             return await _repo.CambiarEstadoAsync(id, EstadosPeliculaNombres.Activa);
         }
 
+        public Task<(bool Existe, string? PortadaAnterior)> ActualizarPortadaAsync(int id, string? urlPortada)
+        {
+            return _repo.ActualizarPortadaAsync(id, urlPortada);
+        }
+
+        // Acepta links de YouTube (watch?v=, youtu.be/, embed/, shorts/) y los guarda en un formato único.
+        // Captura el id del video (11 caracteres).
+        private static readonly Regex RegexYoutube = new(
+            @"^(?:https?://)?(?:www\.|m\.)?(?:youtube\.com/(?:watch\?(?:.*&)?v=|embed/|shorts/|live/)|youtu\.be/)([A-Za-z0-9_-]{11})",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        private static string? NormalizarTrailer(string? url)
+        {
+            if (string.IsNullOrWhiteSpace(url)) return null;
+
+            var coincidencia = RegexYoutube.Match(url.Trim());
+            if (!coincidencia.Success)
+                throw new DatosInvalidosException("El tráiler tiene que ser un link de YouTube (por ejemplo https://www.youtube.com/watch?v=XXXXXXXXXXX).");
+
+            return $"https://www.youtube.com/watch?v={coincidencia.Groups[1].Value}";
+        }
+
         // Pasa los datos que llegan (DTO) a una entidad de la base
         private static Pelicula ToEntity(GuardarPeliculaDto dto)
         {
             return new Pelicula
             {
+                UrlTrailer = NormalizarTrailer(dto.UrlTrailer),
                 Titulo = dto.Titulo.Trim(),
                 Descripcion = string.IsNullOrWhiteSpace(dto.Descripcion) ? null : dto.Descripcion.Trim(),
                 FechaLanzamiento = dto.FechaLanzamiento!.Value,
@@ -138,6 +162,8 @@ namespace Cine.Data.Services.Implementations
                     : p.IdDirectorNavigation.Nombre + " " + p.IdDirectorNavigation.Apellido,
                 IdEstadoPelicula = p.IdEstadoPelicula,
                 Estado = p.IdEstadoPeliculaNavigation?.Estado,
+                UrlPortada = p.UrlPortada,
+                UrlTrailer = p.UrlTrailer,
                 Generos = p.PeliculasGeneros
                     .Select(x => new ItemDto { Id = x.IdGenero, Nombre = x.IdGeneroNavigation.Genero1 })
                     .OrderBy(x => x.Nombre)

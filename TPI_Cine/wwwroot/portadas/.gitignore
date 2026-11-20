@@ -1,0 +1,3 @@
+# Las portadas que se suben desde el front son datos locales de cada base: no se suben al repo
+*
+!.gitignore

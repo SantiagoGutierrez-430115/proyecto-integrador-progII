@@ -21,6 +21,11 @@ namespace Cine.Data.DTOs
         public int IdEstadoPelicula { get; set; }
         public string? Estado { get; set; }
 
+        // Ruta relativa de la portada en la API (ej: /portadas/pelicula-8.jpg) o null
+        public string? UrlPortada { get; set; }
+        // Link de YouTube del tráiler o null
+        public string? UrlTrailer { get; set; }
+
         public List<ItemDto> Generos { get; set; } = new();
         public List<ItemDto> Idiomas { get; set; } = new();
         public List<ItemDto> Actores { get; set; } = new();

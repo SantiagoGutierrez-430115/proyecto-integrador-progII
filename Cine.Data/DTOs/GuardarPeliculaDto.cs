@@ -21,6 +21,10 @@ namespace Cine.Data.DTOs
         public int? IdDistribuidor { get; set; }
         public int? IdDirector { get; set; }
 
+        // Link de YouTube del tráiler (opcional). La portada se sube aparte: POST api/pelicula/{id}/portada
+        [StringLength(300, ErrorMessage = "El link del tráiler no puede superar los 300 caracteres.")]
+        public string? UrlTrailer { get; set; }
+
         // Ids de las tablas intermedias (se reemplazan completos en cada guardado)
         public List<int> IdsGeneros { get; set; } = new();
         public List<int> IdsIdiomas { get; set; } = new();

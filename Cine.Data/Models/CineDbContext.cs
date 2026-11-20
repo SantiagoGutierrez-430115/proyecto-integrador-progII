@@ -968,6 +968,14 @@ public partial class CineDbContext : DbContext
                 .HasMaxLength(150)
                 .IsUnicode(false)
                 .HasColumnName("titulo");
+            entity.Property(e => e.UrlPortada)
+                .HasMaxLength(300)
+                .IsUnicode(false)
+                .HasColumnName("url_portada");
+            entity.Property(e => e.UrlTrailer)
+                .HasMaxLength(300)
+                .IsUnicode(false)
+                .HasColumnName("url_trailer");
 
             entity.HasOne(d => d.IdClasificacionNavigation).WithMany(p => p.Peliculas)
                 .HasForeignKey(d => d.IdClasificacion)

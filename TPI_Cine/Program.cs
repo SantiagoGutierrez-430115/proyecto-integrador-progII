@@ -68,7 +68,8 @@ builder.Services.AddScoped<IProductoShopRepository, ProductoShopRepository>();
 builder.Services.AddScoped<IProductoShopService, ProductoShopService>();
 builder.Services.AddScoped<IComboRepository, ComboRepository>();
 builder.Services.AddScoped<IComboService, ComboService>();
-
+builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 
 // Inyección de configuración JWT
 // La sección en appsettings.json se llama "Jwt" (la misma que usa UsuarioService para firmar el token).
@@ -117,6 +118,15 @@ if (app.Environment.IsDevelopment())
 
 
 app.UseHttpsRedirection();
+
+// Sirve los archivos de wwwroot (las portadas de las películas quedan en wwwroot/portadas).
+// La carpeta se crea acá por si no existe: si falta al arrancar, ASP.NET no serviría ningún archivo.
+var carpetaWwwroot = Path.Combine(app.Environment.ContentRootPath, "wwwroot");
+Directory.CreateDirectory(Path.Combine(carpetaWwwroot, "portadas"));
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(carpetaWwwroot)
+});
 
 app.UseCors("Front");
 

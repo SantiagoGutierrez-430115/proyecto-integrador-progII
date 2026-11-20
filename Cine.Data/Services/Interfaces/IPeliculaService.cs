@@ -20,5 +20,8 @@ namespace Cine.Data.Services.Interfaces
 
         // Vuelve a marcar la película como Activa. Devuelve false si no existe
         Task<bool> ReactivarAsync(int id);
+
+        // Guarda la ruta de la portada ya subida. Devuelve si la película existe y la ruta anterior
+        Task<(bool Existe, string? PortadaAnterior)> ActualizarPortadaAsync(int id, string? urlPortada);
     }
 }
