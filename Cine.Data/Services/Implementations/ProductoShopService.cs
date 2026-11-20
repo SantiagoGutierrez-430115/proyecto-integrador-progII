@@ -29,7 +29,7 @@ namespace Cine.Data.Services.Implementations
 
             var resultado = await _repo.GetAllAsync(nombre, idMarca, idTipoProducto, pagina, tamanio);
 
-            // Convierte cada ProductosShop (entidad) en un ProductoShopDto
+            // Convierte cada Productos en un ProductoShopDto
             var dtos = new List<ProductoShopDto>();
             foreach (var producto in resultado.Items)
             {
@@ -72,7 +72,7 @@ namespace Cine.Data.Services.Implementations
             return await _repo.DeleteAsync(id);
         }
 
-        // Pasa los datos que llegan (DTO) a una entidad de la base
+        // Pasa los datos que llegan a una entidad de la base
         private static ProductosShop ToEntity(GuardarProductoShopDto dto)
         {
             return new ProductosShop
@@ -86,7 +86,7 @@ namespace Cine.Data.Services.Implementations
             };
         }
 
-        // Pasa una entidad de la base a lo que se devuelve en la API (DTO)
+        // Pasa una entidad de la base a lo que se devuelve en la API
         private static ProductoShopDto ToDto(ProductosShop p)
         {
             return new ProductoShopDto

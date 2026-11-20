@@ -27,7 +27,6 @@ namespace Cine.Data.Services.Implementations
 
             var resultado = await _repo.GetAllAsync(titulo, idGenero, idClasificacion, incluirInactivas, pagina, tamanio);
 
-            // Convierte cada Pelicula (entidad) en un PeliculaDto
             var dtos = new List<PeliculaDto>();
             foreach (var pelicula in resultado.Items)
             {
@@ -105,8 +104,8 @@ namespace Cine.Data.Services.Implementations
             return _repo.ActualizarPortadaAsync(id, urlPortada);
         }
 
-        // Acepta links de YouTube (watch?v=, youtu.be/, embed/, shorts/) y los guarda en un formato único.
-        // Captura el id del video (11 caracteres).
+        // Acepta links de YouTube y los guarda en un formato único.
+        // Captura el id del video.
         private static readonly Regex RegexYoutube = new(
             @"^(?:https?://)?(?:www\.|m\.)?(?:youtube\.com/(?:watch\?(?:.*&)?v=|embed/|shorts/|live/)|youtu\.be/)([A-Za-z0-9_-]{11})",
             RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -122,7 +121,7 @@ namespace Cine.Data.Services.Implementations
             return $"https://www.youtube.com/watch?v={coincidencia.Groups[1].Value}";
         }
 
-        // Pasa los datos que llegan (DTO) a una entidad de la base
+        // Pasa los datos que llegan 
         private static Pelicula ToEntity(GuardarPeliculaDto dto)
         {
             return new Pelicula
@@ -139,7 +138,7 @@ namespace Cine.Data.Services.Implementations
             };
         }
 
-        // Pasa una entidad de la base a lo que se devuelve en la API (DTO)
+        // Pasa una entidad de la base a lo que se devuelve en la API
         private static PeliculaDto ToDto(Pelicula p)
         {
             return new PeliculaDto
