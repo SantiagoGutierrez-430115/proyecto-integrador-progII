@@ -61,7 +61,6 @@ namespace TPI_Cine.Controllers
         }
 
         // Alta de administradores: solo un Admin puede crear otro Admin.
-        // POST api/usuario/registro-admin
         [HttpPost("registro-admin")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> RegistroAdmin([FromBody] RegistroAdminDto dto)
@@ -86,7 +85,6 @@ namespace TPI_Cine.Controllers
             }
         }
 
-        // GET api/usuario/admins
         [HttpGet("admins")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ListarAdmins()
