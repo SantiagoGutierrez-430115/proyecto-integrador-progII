@@ -2,10 +2,6 @@
 // Dashboard (solo Admin): películas más vendidas, horarios más populares y
 // formas de pago más usadas. Datos de api/Dashboard (procedimientos almacenados
 // de Script_indicadores_dashboard.sql). Gráficos con Chart.js.
-//
-// Criterios de diseño: una sola serie por gráfico (sin leyenda, el título la nombra),
-// barras finas con puntas redondeadas, grilla tenue, tooltip al pasar el mouse y
-// una tabla con los mismos datos debajo de cada gráfico.
 // ============================================================================
 import { api } from "./api.js";
 import { esc, dinero, toast, hoyIso } from "./ui.js";

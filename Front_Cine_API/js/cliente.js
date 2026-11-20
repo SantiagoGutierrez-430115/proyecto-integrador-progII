@@ -324,7 +324,6 @@ const BUTACAS_POR_FILA = 10;
 
 /**
  * Dibuja el mapa de butacas.
- * butacas: [{ idButaca, nroButaca, disponible, premium }]
  */
 export function mapaButacasHtml(butacas, seleccionadas = new Set(), soloLectura = false) {
   const ordenadas = [...butacas].sort((a, b) => a.nroButaca - b.nroButaca);

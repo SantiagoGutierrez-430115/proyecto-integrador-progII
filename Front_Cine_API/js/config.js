@@ -3,8 +3,6 @@
 // ============================================================================
 
 // Dirección de la API. Por defecto es el perfil "https" de Visual Studio (launchSettings.json).
-// Se puede cambiar desde la pantalla de login ("Dirección de la API") sin tocar el código;
-// el valor elegido queda guardado en el navegador.
 export const API_URL_POR_DEFECTO = "https://localhost:7032";
 const CLAVE_API_URL = "cine_api_url";
 
