@@ -34,7 +34,6 @@ namespace Cine.Data.Services.Implementations
 
             try
             {
-                // Verifica el hash
                 if (!BCrypt.Net.BCrypt.Verify(dto.Password, usuario.Contraseña))
                 {
                     return null; // Contraseña incorrecta
@@ -95,7 +94,7 @@ namespace Cine.Data.Services.Implementations
             var rolAdmin = await _usuarioRepository.GetRoleByNameAsync("Admin")
                 ?? throw new InvalidOperationException("No se encontró el rol 'Admin' en la base de datos.");
 
-            // El admin es solo un usuario: NO se crea cliente (la BD no deja que un cliente sea Admin)
+            // El admin es solo un usuario: NO se crea cliente
             var usuario = new Usuario
             {
                 NombreUsuario = nombreUsuario,

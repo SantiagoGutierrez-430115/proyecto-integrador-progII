@@ -23,14 +23,12 @@ namespace Cine.Data.Services.Implementations
         public async Task<ResultadoPaginadoDto<ComboDto>> GetAllAsync(
             string? descripcion, int? idTipoCombo, int pagina, int tamanio)
         {
-            // La página mínima es 1, y el tamaño tiene que estar entre 1 y 100
             if (pagina < 1) pagina = 1;
             if (tamanio < 1) tamanio = 1;
             if (tamanio > 100) tamanio = 100;
 
             var resultado = await _repo.GetAllAsync(descripcion, idTipoCombo, pagina, tamanio);
 
-            // Convierte cada Combo (entidad) en un ComboDto
             var dtos = new List<ComboDto>();
             foreach (var combo in resultado.Items)
             {
@@ -60,7 +58,6 @@ namespace Cine.Data.Services.Implementations
 
             var creado = await _repo.CreateAsync(combo);
 
-            // Se vuelve a leer para devolver el combo con tipo y nombres de productos
             var completo = await _repo.GetByIdAsync(creado.IdCombo);
             return ToDto(completo!);
         }
@@ -117,7 +114,6 @@ namespace Cine.Data.Services.Implementations
             return combo;
         }
 
-        // Pasa una entidad de la base a lo que se devuelve en la API (DTO)
         private static ComboDto ToDto(Combo c)
         {
             return new ComboDto
