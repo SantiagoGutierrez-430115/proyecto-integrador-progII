@@ -24,6 +24,7 @@ namespace Cine.Data.DTOs
         public string? Apellido { get; set; }
 
         [StringLength(20, ErrorMessage = "El número de documento no puede superar los 20 caracteres.")]
+        [RegularExpression(@"^\d+$", ErrorMessage = "El número de documento solo puede tener números (sin puntos, letras ni espacios).")]
         public string? NroDoc { get; set; }
 
         [EmailAddress(ErrorMessage = "El correo electrónico no tiene un formato válido.")]

@@ -75,7 +75,9 @@
               </div>
               <div class="col-7">
                 <label class="form-label">Número de documento</label>
-                <input name="nroDoc" class="form-control form-control-cinema" maxlength="20" required />
+                <input name="nroDoc" class="form-control form-control-cinema" maxlength="20" required
+                  inputmode="numeric" pattern="[0-9]+" title="Solo números, sin puntos ni espacios"
+                  oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
               </div>
               <div class="col-12">
                 <label class="form-label">Fecha de nacimiento <span class="text-muted-silver">(opcional)</span></label>

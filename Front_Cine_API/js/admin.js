@@ -120,7 +120,8 @@ function editarCliente(c) {
       <div class="row g-2">
         <div class="col-md-6"><label class="form-label">Nombre</label><input name="nombre" class="form-control form-control-cinema" maxlength="100" value="${esc(c.nombre)}" required /></div>
         <div class="col-md-6"><label class="form-label">Apellido</label><input name="apellido" class="form-control form-control-cinema" maxlength="100" value="${esc(c.apellido)}" required /></div>
-        <div class="col-md-6"><label class="form-label">Nº de documento (${esc(c.tipoDocumento)})</label><input name="nroDoc" class="form-control form-control-cinema" maxlength="20" value="${esc(c.nroDoc)}" required /></div>
+        <div class="col-md-6"><label class="form-label">Nº de documento (${esc(c.tipoDocumento)})</label><input name="nroDoc" class="form-control form-control-cinema" maxlength="20" value="${esc(c.nroDoc)}" required
+          inputmode="numeric" pattern="[0-9]+" title="Solo números, sin puntos ni espacios" oninput="this.value = this.value.replace(/[^0-9]/g, '')" /></div>
         <div class="col-md-6"><label class="form-label">Correo electrónico</label><input type="email" name="correoElectronico" class="form-control form-control-cinema" maxlength="254" value="${esc(c.correoElectronico)}" required /></div>
       </div>`,
     onSubmit: async form => {
