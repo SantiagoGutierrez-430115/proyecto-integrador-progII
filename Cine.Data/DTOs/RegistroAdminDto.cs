@@ -21,7 +21,7 @@ namespace Cine.Data.DTOs
         public string Password { get; set; } = string.Empty;
     }
 
-    // Lo que se devuelve al listar administradores (nunca la contraseña)
+    // Lo que se devuelve al listar administradores
     public class AdminDto
     {
         public int IdUsuario { get; set; }

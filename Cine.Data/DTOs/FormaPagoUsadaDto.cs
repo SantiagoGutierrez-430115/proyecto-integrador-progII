@@ -1,6 +1,5 @@
 namespace Cine.Data.DTOs
 {
-    // Una fila del indicador "formas de pago más usadas".
     public class FormaPagoUsadaDto
     {
         public int IdFormaPago { get; set; }

@@ -25,8 +25,6 @@ namespace Cine.Data.Repositories.Implementations
             if (!string.IsNullOrWhiteSpace(filtro))
             {
                 filtro = filtro.Trim();
-                // No hace falta ToLower(): la intercalación por defecto de SQL Server
-                // (..._CI_AS) ya compara sin distinguir mayúsculas/minúsculas.
                 query = query.Where(c =>
                     c.Nombre.Contains(filtro) ||
                     c.Apellido.Contains(filtro) ||

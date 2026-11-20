@@ -12,9 +12,6 @@ namespace Cine.Data.DTOs
         public string CorreoElectronico { get; set; } = string.Empty;
     }
 
-    // DTO para recibir los datos cuando el empleado edita un cliente.
-    // Todos los campos son opcionales: el que venga null (o no se envíe) no se modifica.
-    // Los largos máximos coinciden con las columnas de la base de datos.
     public class ActualizarClienteDto
     {
         [StringLength(100, ErrorMessage = "El nombre no puede superar los 100 caracteres.")]
@@ -32,7 +29,6 @@ namespace Cine.Data.DTOs
         public string? CorreoElectronico { get; set; }
     }
 
-    // DTO para revisar las reservas del cliente en la sección de soporte
     public class ReservaClienteDto
     {
         public int IdReserva { get; set; }
