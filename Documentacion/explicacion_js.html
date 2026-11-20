@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Funcionamiento de los JavaScript del front — CINE NOIR</title>
+<style>
+  @page { size: A4; margin: 17mm 16mm 17mm 16mm; }
+  :root { --rojo: #c40812; --rojo-suave: #fdecec; --tinta: #1b1b1f; --gris: #5b5b66; --linea: #dcdce2; --fondo: #f6f6f8; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", system-ui, Arial, sans-serif; color: var(--tinta); font-size: 10.3pt; line-height: 1.5; margin: 0; }
+  h1 { font-size: 20pt; margin: 0 0 2px; }
+  h1 span { color: var(--rojo); }
+  .bajada { color: var(--gris); margin: 0 0 14px; }
+  .encabezado { display: flex; align-items: center; gap: 12px; border-bottom: 2px solid var(--rojo); padding-bottom: 10px; margin-bottom: 14px; }
+  .encabezado img { width: 16mm; height: 16mm; border-radius: 4mm; }
+  h2 { font-size: 13.5pt; color: var(--rojo); margin: 18px 0 7px; padding-bottom: 4px; border-bottom: 1.5px solid var(--rojo); break-after: avoid; }
+  h3 { font-size: 11pt; margin: 12px 0 4px; break-after: avoid; }
+  p { margin: 0 0 7px; }
+  ul, ol { margin: 0 0 8px; padding-left: 20px; }
+  li { margin-bottom: 3px; }
+  code { font-family: Consolas, "Cascadia Mono", monospace; font-size: 8.8pt; background: var(--fondo); padding: 1px 4px; border-radius: 3px; }
+  pre { font-family: Consolas, "Cascadia Mono", monospace; font-size: 8.6pt; line-height: 1.45; background: #1e1e24; color: #e8e8ee;
+        padding: 8px 10px; border-radius: 6px; margin: 4px 0 9px; white-space: pre-wrap; break-inside: avoid; }
+  pre .c { color: #8f93a3; }
+  table { width: 100%; border-collapse: collapse; margin: 5px 0 10px; font-size: 9.3pt; break-inside: avoid; }
+  th { background: var(--tinta); color: #fff; text-align: left; padding: 5px 7px; font-weight: 600; }
+  td { padding: 4px 7px; border-bottom: 1px solid var(--linea); vertical-align: top; }
+  tr:nth-child(even) td { background: var(--fondo); }
+  .nota { background: var(--rojo-suave); border-left: 4px solid var(--rojo); padding: 7px 10px; margin: 8px 0; font-size: 9.6pt; break-inside: avoid; }
+  .bloque { break-inside: avoid; }
+  .pasos { counter-reset: paso; list-style: none; padding-left: 0; }
+  .pasos > li { counter-increment: paso; position: relative; padding-left: 26px; margin-bottom: 6px; }
+  .pasos > li::before { content: counter(paso); position: absolute; left: 0; top: 1px; width: 18px; height: 18px; border-radius: 50%;
+                        background: var(--rojo); color: #fff; font-size: 8.5pt; font-weight: 700; text-align: center; line-height: 18px; }
+</style>
+</head>
+<body>
+
+<div class="encabezado">
+  <img src="../Front_Cine_API/img/logo.png" alt="Logo" />
+  <div>
+    <h1>Funcionamiento de los JavaScript del front <span>CINE NOIR</span></h1>
+    <div class="bajada" style="margin:0">TPI Programación II · Carpeta <code>Front_Cine_API/js</code></div>
+  </div>
+</div>
+
+<p>El front no usa frameworks: es JavaScript del navegador dividido en <b>8 archivos</b>, uno por responsabilidad.
+Primero va la idea general, después cada archivo y al final un ejemplo completo de una compra.</p>
+
+<!-- ================================================================== -->
+<h2>1. Idea general</h2>
+
+<h3>Módulos</h3>
+<p>Cada archivo es un <b>módulo de JavaScript</b>. Comparte funciones con <code>export</code> y usa las de otros archivos con <code>import</code>:</p>
+<pre><span class="c">// api.js</span>
+export async function api(endpoint, opciones) { ... }
+
+<span class="c">// cliente.js</span>
+import { api } from "./api.js";</pre>
+<p>En <code>index.html</code> se carga un solo archivo:</p>
+<pre>&lt;script type="module" src="js/main.js"&gt;&lt;/script&gt;</pre>
+<p>El navegador lee los <code>import</code> de <code>main.js</code> y carga solo los demás archivos. Por eso <b>no funciona con doble
+clic</b> (<code>file:///</code>): el navegador bloquea los módulos que no vienen de un servidor. Hay que abrirlo con Live Server.</p>
+
+<div class="bloque">
+<h3>Quién usa a quién</h3>
+<pre>                main.js  (arranque y navegación)
+          ┌────────┼────────┬───────────┐
+       auth.js  cliente.js  admin.js  dashboard.js
+          │        │          │           │
+          └────────┴────┬─────┴───────────┘
+                 api.js   ui.js   config.js   (archivos base)</pre>
+<ul>
+  <li>Los archivos de arriba manejan <b>pantallas</b>.</li>
+  <li>Los de abajo son <b>herramientas</b> que usan todos.</li>
+  <li><b>Solo <code>api.js</code> habla con la API.</b> Si mañana cambia la forma de llamar a la API, se toca un solo archivo.</li>
+</ul>
+</div>
+
+<h3>Es una página única (SPA)</h3>
+<p>Todas las pantallas están en <code>index.html</code> desde el principio, pero ocultas. JavaScript muestra u oculta secciones
+con la clase <code>d-none</code> de Bootstrap. No se recarga la página al navegar.</p>
+
+<!-- ================================================================== -->
+<h2>2. config.js — configuración</h2>
+<p><b>Dirección de la API:</b></p>
+<ul>
+  <li><code>getApiUrl()</code> devuelve la dirección guardada en <code>localStorage</code> o, si no hay ninguna, <code>https://localhost:7032</code>.</li>
+  <li><code>setApiUrl()</code> guarda la dirección que se elige en la pantalla de login con el enlace <b>"Dirección de la API"</b>.
+    Así se puede cambiar sin tocar el código.</li>
+</ul>
+<p><b>Catálogos fijos:</b> salas, horarios, tipos de documento, tipos de butaca, marcas, tipos de producto y tipos de combo.
+Están escritos en el archivo porque <b>la API no tiene endpoints</b> para ellos.</p>
+<p><b>Funciones de ayuda:</b> <code>nombreSala(id)</code> y <code>horaDeHorario(id)</code> traducen ids a texto. Hacen falta porque
+<code>FuncionDto</code> solo devuelve ids: con ellas se muestra "Sala 1 · Tradicional · Sucursal 1" y "19:30".</p>
+
+<!-- ================================================================== -->
+<h2>3. api.js — el "cartero"</h2>
+<p>Es el archivo más importante para entender la comunicación con el backend. Toda llamada pasa por una sola función:</p>
+<pre>const peliculas = await api("/api/Pelicula", { query: { titulo: "avatar", pagina: 1 } });
+await api("/api/compras", { method: "POST", body: { idFuncion: 5, idsButacas: [12, 13] } });</pre>
+
+<p>Lo que hace <code>api()</code>, en orden:</p>
+<ol class="pasos">
+  <li><b>Arma la URL.</b> Une la dirección de la API con el endpoint y convierte <code>query</code> en parámetros
+    (<code>?titulo=avatar&amp;pagina=1</code>). Con <code>URLSearchParams</code> descarta los vacíos.</li>
+  <li><b>Arma los encabezados.</b>
+    <ul>
+      <li>Si hay <code>body</code>, agrega <code>Content-Type: application/json</code> y convierte el objeto con <code>JSON.stringify</code>.</li>
+      <li>Si hay token guardado, agrega <code>Authorization: Bearer &lt;token&gt;</code>. Así la API sabe quién es el usuario.</li>
+      <li>Si el <code>body</code> es un <b>FormData</b> (la subida de una portada), lo manda tal cual: el navegador arma el <code>multipart/form-data</code>.</li>
+    </ul></li>
+  <li><b>Hace el <code>fetch</code>.</b> Si falla la conexión (la API está apagada o el certificado no está aceptado), lanza un error claro:
+    <i>"No se pudo conectar con la API…"</i>.</li>
+  <li><b>Lee la respuesta.</b> <code>204</code> significa que no hay contenido. Si no, intenta interpretarla como JSON; si no es JSON, la deja como texto.</li>
+  <li><b>Si la respuesta es un error</b> (<code>!respuesta.ok</code>):
+    <ul>
+      <li>Si es <code>401</code> y había sesión, el token venció: llama a <code>alPerderSesion()</code> y la app vuelve al login.</li>
+      <li>Lanza un <code>ApiError</code> con un <b>mensaje legible</b> y el <b>código HTTP</b> (<code>err.status</code>).</li>
+    </ul></li>
+</ol>
+
+<div class="bloque">
+<p><b><code>mensajeDeError()</code></b> entiende los 3 formatos de error que devuelve la API:</p>
+<table>
+  <tr><th style="width:30%">La API devuelve</th><th>Ejemplo</th><th style="width:22%">Qué toma</th></tr>
+  <tr><td>Texto plano</td><td><code>BadRequest("La función ya empezó.")</code></td><td>El texto</td></tr>
+  <tr><td><code>{ mensaje }</code></td><td><code>Conflict(new { mensaje = "..." })</code></td><td><code>mensaje</code></td></tr>
+  <tr><td>ProblemDetails (validación automática)</td><td><code>{ errors: { Email: ["..."] } }</code></td><td>Une todos los mensajes</td></tr>
+</table>
+<p>Si no reconoce el formato, usa un mensaje genérico según el código: 403 → <i>"No tenés permisos"</i>, 404 → <i>"No se encontró"</i>, etc.</p>
+</div>
+
+<div class="bloque">
+<p>Como el error lleva <code>status</code>, el resto del código puede reaccionar distinto según el caso:</p>
+<pre>catch (err) {
+  if (err.status === 404) { <span class="c">/* "ningún cliente coincide" → aviso amarillo */</span> }
+  else { <span class="c">/* error real → aviso rojo */</span> }
+}</pre>
+</div>
+
+<!-- ================================================================== -->
+<h2>4. auth.js — sesión y roles</h2>
+<p><b><code>login(email, password)</code></b>: hace <code>POST /api/Usuario/login</code>, guarda el token recibido en
+<code>localStorage</code> y devuelve la sesión.</p>
+
+<p><b><code>sesionActual()</code></b> decodifica el token para saber quién está conectado:</p>
+<ul>
+  <li>Un JWT tiene 3 partes separadas por puntos: <code>encabezado.contenido.firma</code>. La del medio es JSON codificado en Base64.</li>
+  <li><code>decodificarToken()</code> toma esa parte, la decodifica con <code>atob</code> y <code>TextDecoder</code> (para respetar acentos) y la convierte a objeto.</li>
+  <li>De ese objeto saca los <b>claims</b> que puso el backend en <code>UsuarioService</code>: id, correo y <b>rol</b>. Los nombres son largos porque
+    son los <code>ClaimTypes</code> de .NET, por ejemplo <code>http://schemas.microsoft.com/ws/2008/06/identity/claims/role</code>.</li>
+  <li>Revisa <code>exp</code> (vencimiento). Si el token venció, lo borra y devuelve <code>null</code>.</li>
+  <li>Devuelve <code>{ idUsuario, email, rol, esAdmin, esInvitado }</code>.</li>
+</ul>
+<div class="nota"><b>Para la defensa:</b> el front <b>lee</b> el token pero <b>no lo verifica</b>, porque no tiene la clave secreta. Lo usa solo para
+mostrar u ocultar pantallas. La seguridad real está en la API: valida la firma en cada pedido y aplica
+<code>[Authorize(Roles = "Admin")]</code>.</div>
+
+<p><b>Modo invitado:</b></p>
+<ul>
+  <li><code>entrarComoInvitado()</code> borra el token y guarda la marca <code>cine_invitado = "1"</code>.</li>
+  <li><code>sesionActual()</code> devuelve entonces un usuario con <code>esInvitado: true</code>.</li>
+  <li>No hay token, así que la API trata al invitado como anónimo. Solo puede usar los endpoints públicos (<code>[AllowAnonymous]</code>).</li>
+</ul>
+<p><b><code>logout()</code></b> borra el token y la marca de invitado.</p>
+
+<!-- ================================================================== -->
+<h2>5. ui.js — utilidades de pantalla</h2>
+<table>
+  <tr><th style="width:26%">Función</th><th>Para qué sirve</th></tr>
+  <tr><td><code>esc(texto)</code></td><td><b>Seguridad.</b> Reemplaza <code>&lt;</code>, <code>&gt;</code>, <code>"</code>, <code>&amp;</code>, <code>'</code> antes de insertar texto en el HTML.
+    Si alguien escribe <code>&lt;script&gt;…</code> en una reseña, se muestra como texto y no se ejecuta (protege contra ataques <b>XSS</b>).</td></tr>
+  <tr><td><code>dinero(n)</code></td><td>Formato de moneda argentina con <code>Intl.NumberFormat("es-AR")</code>: <code>$ 6.500,00</code>.</td></tr>
+  <tr><td><code>fecha("2026-11-20")</code></td><td>Devuelve <code>20/11/2026</code>. Corta el texto en lugar de usar <code>new Date()</code>, que puede correr la fecha un día por la zona horaria.</td></tr>
+  <tr><td><code>toast(msg, tipo)</code></td><td>Muestra un aviso abajo a la derecha (Toast de Bootstrap) que se cierra solo.</td></tr>
+  <tr><td><code>cargando</code>, <code>vacio</code>, <code>errorEn</code></td><td>Ponen en un contenedor un spinner, un mensaje de "no hay datos" o un error.</td></tr>
+  <tr><td><code>posterHtml(pelicula)</code></td><td>Arma la tarjeta del póster: la foto si existe y, debajo, un póster generado con la inicial y un color calculado del título.
+    Si la foto no carga (<code>onerror="this.remove()"</code>), se ve el generado.</td></tr>
+  <tr><td><code>urlPortada(p)</code></td><td>Si la portada es un link completo (Wikipedia), lo usa tal cual. Si es una ruta (<code>/portadas/x.jpg</code>), le antepone la dirección de la API.</td></tr>
+  <tr><td><code>idYoutube(url)</code></td><td>Saca con una expresión regular los 11 caracteres del id del video, para armar el reproductor embebido.</td></tr>
+  <tr><td><code>abrirFormulario({...})</code></td><td>Formulario en ventana modal reutilizable (ver abajo).</td></tr>
+  <tr><td><code>paginador(...)</code></td><td>Dibuja los botones « 1 2 3 » y avisa qué página se eligió.</td></tr>
+</table>
+
+<div class="bloque">
+<p><b><code>abrirFormulario</code></b> lo usan todas las altas y ediciones del panel de admin. Recibe un título, el HTML de los campos
+y una función <code>onSubmit</code>, y se encarga de:</p>
+<ol class="pasos">
+  <li>Validar los campos con las reglas de HTML (<code>required</code>, <code>maxlength</code>, <code>type="email"</code>) mediante <code>checkValidity()</code>.</li>
+  <li>Deshabilitar el botón mientras se guarda, para evitar doble envío.</li>
+  <li>Si <code>onSubmit</code> lanza un error (por ejemplo, el 409 <i>"El DNI ya pertenece a otro cliente"</i>), mostrarlo <b>dentro</b> del modal sin cerrarlo, para que el usuario corrija.</li>
+  <li>Si sale bien, cerrar el modal.</li>
+</ol>
+</div>
+
+<!-- ================================================================== -->
+<h2>6. cliente.js — la parte pública y de clientes</h2>
+
+<h3>Datos compartidos</h3>
+<p><code>cargarPeliculasActivas()</code> trae todas las películas activas y las guarda en un <code>Map</code> (<code>id → película</code>).
+Sirve para mostrar el <b>título</b> en la lista de funciones, porque la API solo devuelve <code>idPelicula</code>. Pide de a 100 en un
+<code>while</code> porque la API pagina.</p>
+
+<h3>Cartelera</h3>
+<ul>
+  <li><code>initCartelera()</code> llena los filtros de género y clasificación con <code>/api/Catalogo/...</code>. Usa <code>Promise.all</code> para hacer
+    los dos pedidos <b>al mismo tiempo</b>.</li>
+  <li><code>cargarCartelera(pagina)</code> llama a <code>GET /api/Pelicula</code> con filtros y paginación, y arma las tarjetas con
+    <i>template literals</i> (texto entre comillas invertidas con <code>${...}</code>).</li>
+  <li>A cada botón se le agrega un <code>addEventListener("click", ...)</code>. El botón lleva el id en un atributo <code>data-detalle="8"</code>,
+    y el código lo lee con <code>b.dataset.detalle</code>.</li>
+</ul>
+
+<h3>Detalle de la película</h3>
+<p><code>abrirDetallePelicula(id)</code> hace <b>3 pedidos en paralelo</b> con <code>Promise.all</code>: la película, sus funciones y sus reseñas. Con eso arma:</p>
+<ul>
+  <li>El reproductor del tráiler (un <code>iframe</code> de <code>youtube-nocookie.com</code>) y el botón "Ver en YouTube".</li>
+  <li>La información, las próximas funciones (filtradas a las que todavía no empezaron) y las reseñas con el promedio de estrellas.</li>
+  <li>El formulario de reseña, según el perfil: <b>cliente</b> → formulario que envía <code>POST /api/Resenia</code>;
+    <b>invitado</b> → botón "Iniciá sesión"; <b>admin</b> → nada, porque no tiene cliente asociado.</li>
+</ul>
+
+<h3>Funciones</h3>
+<p><code>buscarFunciones()</code> elige el endpoint según los filtros: con fecha → <code>/api/Funcion/fecha?fecha=...</code>;
+con película → <code>/api/Funcion/pelicula/{id}</code>; sin filtros → <code>/api/Funcion</code>. Después filtra las que no empezaron y las
+ordena por fecha y hora. <code>inicioFuncion(f)</code> arma un <code>Date</code> uniendo la fecha y la hora de la función.</p>
+
+<h3>Butacas y compra</h3>
+<p>Es lo más elaborado; el paso a paso está en la sección 10.</p>
+<ul>
+  <li><code>mapaButacasHtml()</code> dibuja la sala: ordena por número, arma filas de 10 con letras (A, B, C… con
+    <code>String.fromCharCode(65 + fila)</code>) y le pone a cada butaca una clase CSS según su estado: <code>occupied</code>,
+    <code>premium</code> o <code>selected</code>.</li>
+  <li>La selección se guarda en un <b><code>Set</code></b> (una colección sin repetidos). Al hacer clic se agrega o se quita, y la función
+    <code>redibujar()</code> actualiza el mapa, la lista de elegidas y el total.</li>
+  <li>Las butacas preferenciales se detectan comparando precios: la API no informa el tipo de butaca, así que si cuesta más que la más
+    barata, es preferencial.</li>
+</ul>
+
+<h3>Candy bar</h3>
+<p><code>cargarShop()</code> lista los combos y los productos. Si el combo es más barato que la suma de sus productos, muestra el ahorro.</p>
+
+<div class="bloque">
+<h3>Comunicación con main.js sin importarlo</h3>
+<p>Cuando un invitado toca "Iniciá sesión para comprar", <code>cliente.js</code> dispara un evento propio:</p>
+<pre>window.dispatchEvent(new CustomEvent("cine:pedir-login"));</pre>
+<p><code>main.js</code> lo escucha y vuelve al login. Así <code>cliente.js</code> <b>no depende</b> de <code>main.js</code> y se evita que dos
+archivos se importen entre sí.</p>
+</div>
+
+<!-- ================================================================== -->
+<h2>7. admin.js — soporte y gestión</h2>
+<p><b>Carga perezosa:</b> cada pestaña (Clientes, Películas, Funciones…) pide sus datos <b>la primera vez que se abre</b>, no al entrar.
+Lo controla el <code>Set</code> <code>yaCargado</code> junto con el evento <code>shown.bs.tab</code> de Bootstrap.</p>
+
+<div class="bloque">
+<p>Todas las secciones siguen el mismo patrón:</p>
+<pre>cargarXxx()      → GET a la API → arma la tabla → conecta los botones de acción
+formularioXxx()  → abrirFormulario → POST (nuevo) o PUT (edición) → recarga la tabla
+eliminarXxx()    → confirm() → DELETE → recarga la tabla</pre>
+<p><code>enlazarAcciones()</code> conecta todos los botones de una tabla de una vez. Cada botón tiene <code>data-accion="editar"</code> y
+<code>data-id="5"</code>, y se llama a la función que corresponde.</p>
+</div>
+
+<p>Particularidades de cada pestaña:</p>
+<ul>
+  <li><b>Clientes (soporte):</b> si la búsqueda devuelve <b>404</b>, no lo muestra como error sino como aviso amarillo:
+    <i>"No se encontró ningún cliente que coincida…"</i>. "Ver reservas" abre un modal con la tabla de reservas del cliente.</li>
+  <li><b>Películas:</b>
+    <ul>
+      <li>Los 8 catálogos se piden una sola vez (<code>Promise.all</code>) y quedan guardados.</li>
+      <li>Géneros, idiomas y actores son listas de casillas; <code>fd.getAll("idsGeneros")</code> devuelve todos los marcados.</li>
+      <li>La <b>portada</b> se sube <b>después</b> de guardar la película, porque hace falta su id. Se manda con un <code>FormData</code> a
+        <code>POST /api/Pelicula/{id}/portada</code>.</li>
+      <li>Antes de subirla se valida tipo y tamaño, y se muestra una vista previa con <code>URL.createObjectURL(archivo)</code>.</li>
+    </ul></li>
+  <li><b>Butacas:</b> la API crea de a una, así que para agregar N se hace un <code>for</code> con <code>await</code>. Van en orden para que la
+    numeración sea correlativa. Si una falla, avisa cuántas se crearon.</li>
+  <li><b>Combos:</b> al marcar productos o cambiar cantidades se recalcula en vivo la suma, porque la API no deja que el precio del combo la supere.</li>
+  <li><b>Administradores:</b> formulario que llama a <code>POST /api/Usuario/registro-admin</code> y tabla con <code>GET /api/Usuario/admins</code>.</li>
+</ul>
+
+<!-- ================================================================== -->
+<h2>8. dashboard.js — estadísticas</h2>
+<ol class="pasos">
+  <li><code>cargarDashboard()</code> lee los filtros (desde, hasta, top) y hace los <b>3 pedidos en paralelo</b> a <code>/api/Dashboard/...</code>.</li>
+  <li><code>dibujarKpis()</code> calcula los indicadores de arriba sumando con <code>reduce</code>: entradas vendidas, recaudación,
+    precio promedio (recaudación / entradas) y horario más elegido.</li>
+  <li><code>grafico()</code> es una función genérica que crea un gráfico de barras de <b>Chart.js</b>. Antes destruye el gráfico anterior con
+    <code>.destroy()</code>, porque si no se superponen al filtrar. Configura los colores del sitio, el tooltip con varias líneas de detalle
+    y si las barras van horizontales o verticales.</li>
+  <li>Debajo de cada gráfico, <code>tabla()</code> arma una tabla con los mismos datos, para quien prefiera los números exactos.</li>
+  <li>Los botones "Últimos 7 días" y "Últimos 30 días" calculan las fechas con <code>restarDias()</code> y recargan.</li>
+</ol>
+
+<!-- ================================================================== -->
+<h2>9. main.js — arranque y navegación</h2>
+<div class="bloque">
+<p><b>Al abrir la página:</b></p>
+<pre>const sesionGuardada = sesionActual();
+if (sesionGuardada) mostrarApp(sesionGuardada);   <span class="c">// ya había iniciado sesión</span>
+else mostrarAcceso();                              <span class="c">// va al login</span></pre>
+</div>
+<ul>
+  <li><b><code>mostrarAcceso()</code></b> muestra el login y llama a <code>verificarApi()</code>. Esa función hace un pedido de prueba a
+    <code>/api/Catalogo/generos</code> para pintar el indicador verde <i>API conectada</i> o rojo <i>Sin conexión</i>.</li>
+  <li><b>Login:</b> valida los campos, llama a <code>login()</code>, y si sale bien llama a <code>mostrarApp()</code>. Si la API responde 401,
+    muestra <i>"Correo o contraseña incorrectos"</i>.</li>
+  <li><b>Registro:</b> comprueba que las dos contraseñas coincidan, llama a <code>registrar()</code> y vuelve a la pestaña de login con el correo ya escrito.</li>
+  <li><b><code>mostrarApp(sesion)</code>:</b> muestra el correo y el rol arriba a la derecha; muestra Dashboard y Soporte <b>solo si
+    <code>esAdmin</code></b>; si es invitado, cambia el botón "Salir" por "Iniciar sesión"; carga las películas y la cartelera.</li>
+  <li><b><code>cambiarVista(nombre)</code></b> es la navegación de la SPA: oculta todas las secciones y muestra la elegida. Si alguien no admin
+    intenta abrir <code>admin</code> o <code>dashboard</code>, lo manda a la cartelera. Carga los datos de Funciones y Candy bar la primera vez que se abren.</li>
+  <li><b>Salir:</b> <code>logout()</code> y después <code>location.reload()</code>, para empezar limpio.</li>
+  <li><b>Sesión vencida:</b> con <code>setAlPerderSesion</code> se registra qué hacer si <code>api.js</code> recibe un 401: avisar y volver al login.</li>
+</ul>
+
+<!-- ================================================================== -->
+<h2>10. Ejemplo completo: un cliente compra 2 entradas</h2>
+<ol class="pasos">
+  <li><b>Funciones → Buscar.</b> <code>buscarFunciones()</code> llama a <code>api("/api/Funcion")</code>, filtra, ordena y dibuja la tabla.</li>
+  <li><b>Clic en "Butacas".</b> <code>abrirButacas(funcion)</code> abre el modal y <code>dibujarSeleccion()</code> pide
+    <code>GET /api/funciones/15/butacas</code>. La API devuelve cada butaca con <code>precio</code> y <code>disponible</code>.</li>
+  <li><b>Clic en las butacas 41 y 42.</b> Se agregan al <code>Set</code> <code>seleccion</code>, y <code>redibujar()</code> las pinta en rojo y
+    muestra el total, por ejemplo $13.000.</li>
+  <li><b>"Comprar entradas".</b> Pide confirmación con <code>confirm()</code> y después:
+    <pre>await api("/api/compras", { method: "POST", body: { idFuncion: 15, idsButacas: [101, 102] } });</pre>
+    <code>api.js</code> agrega el token, así la API sabe qué cliente compra.</li>
+  <li><b>En el backend:</b> <code>CompraController</code> → <code>CompraService</code> (valida) → <code>CompraRepository</code>
+    (factura, entradas y pago en una transacción).</li>
+  <li><b>Respuesta 201</b> <code>{ nroFactura: 297, total: 13000 }</code>. El front muestra el cartel verde <i>"¡Compra realizada! Factura Nº 297"</i>
+    y vuelve a pedir las butacas: ahora la 41 y la 42 aparecen ocupadas.</li>
+  <li><b>Si alguien las compró un segundo antes,</b> la API responde <b>409</b>. El <code>catch</code> muestra el aviso y, como
+    <code>err.status === 409</code>, actualiza el mapa con el estado real.</li>
+</ol>
+
+<!-- ================================================================== -->
+<div class="bloque">
+<h2>11. Conceptos para nombrar en la defensa</h2>
+<ul>
+  <li><b>Módulos ES</b> (<code>import</code> / <code>export</code>) y <b>separación de responsabilidades</b>: cada archivo hace una sola cosa.</li>
+  <li><b>Asincronía:</b> <code>async</code> / <code>await</code> y <code>fetch</code>; <b><code>Promise.all</code></b> para hacer pedidos en paralelo.</li>
+  <li><b>Manejo de errores</b> con <code>try</code> / <code>catch</code> y una clase propia, <code>ApiError</code>, que lleva el código HTTP.</li>
+  <li><b>Autenticación con JWT:</b> el token se guarda en <code>localStorage</code>, se manda en el encabezado <code>Authorization</code> y se decodifica para leer el rol.</li>
+  <li><b>Manipulación del DOM:</b> <i>template literals</i>, <code>innerHTML</code>, <code>classList</code>, <code>addEventListener</code> y atributos
+    <code>data-*</code> con <code>dataset</code>.</li>
+  <li><b>Seguridad en el front:</b> escape de HTML con <code>esc()</code> contra <b>XSS</b>. Las validaciones del front son una comodidad; la seguridad real está en la API.</li>
+  <li><b>Estructuras de datos:</b> <code>Map</code> para las películas por id y <code>Set</code> para las butacas elegidas y las pestañas ya cargadas.</li>
+  <li><b>Eventos propios</b> (<code>CustomEvent</code>) para comunicar módulos sin acoplarlos.</li>
+  <li><b>Bootstrap</b> desde JavaScript (<code>Modal</code>, <code>Toast</code>, <code>Tab</code>) y <b>Chart.js</b> para los gráficos.</li>
+</ul>
+</div>
+
+</body>
+</html>

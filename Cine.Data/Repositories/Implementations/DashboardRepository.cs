@@ -5,8 +5,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Cine.Data.Repositories.Implementations
 {
-    // Llama a los procedimientos almacenados de los indicadores (Script_indicadores_dashboard.sql).
-    // Los valores con {llaves} se mandan como parámetros: no hay riesgo de SQL injection.
     public class DashboardRepository : IDashboardRepository
     {
         private readonly CineDbContext _context;

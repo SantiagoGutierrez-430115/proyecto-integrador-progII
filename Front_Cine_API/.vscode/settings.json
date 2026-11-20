@@ -1,0 +1,5 @@
+{
+  // Live Server debe usar el puerto 5500: es el único origen permitido por CORS en Program.cs
+  "liveServer.settings.port": 5500,
+  "liveServer.settings.host": "127.0.0.1"
+}

@@ -72,6 +72,8 @@ namespace TPI_Cine.Controllers
             }
         }
 
+        // Público: los invitados también ven las reseñas en el detalle de la película
+        [AllowAnonymous]
         [HttpGet("pelicula/{idPelicula}")]
         public async Task<IActionResult> ListarPorPelicula(int idPelicula)
         {

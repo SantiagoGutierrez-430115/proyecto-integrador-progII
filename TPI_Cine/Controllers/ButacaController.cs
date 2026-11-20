@@ -39,6 +39,7 @@ namespace TPI_Cine.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<ActionResult<List<ButacaDto>>> ListarButacas()
         {
             var butacas = await serv.ListarAsync();
@@ -47,6 +48,7 @@ namespace TPI_Cine.Controllers
         }
 
         [HttpGet("{id}")]
+        [AllowAnonymous]
         public async Task<ActionResult<ButacaDto>> ObtenerButaca(int id)
         {
             try
@@ -62,6 +64,7 @@ namespace TPI_Cine.Controllers
         }
 
         [HttpGet("sala/{idSala}")]
+        [AllowAnonymous]
         public async Task<ActionResult<List<ButacaDto>>> ListarPorSala(int idSala)
         {
             var butacas = await serv.ListarPorSalaAsync(idSala);
@@ -70,6 +73,7 @@ namespace TPI_Cine.Controllers
         }
 
         [HttpGet("sala/{idSala}/disponibles")]
+        [AllowAnonymous]
         public async Task<ActionResult<List<ButacaDto>>> ListarDisponibles(int idSala)
         {
             var butacas = await serv.ListarDisponiblesPorSalaAsync(idSala);

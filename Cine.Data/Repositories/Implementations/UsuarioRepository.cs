@@ -28,6 +28,28 @@ namespace Cine.Data.Repositories.Implementations
             return await _context.Usuarios.Include(x => x.Rol).FirstOrDefaultAsync(x => x.CorreoElectronico == email);
         }
 
+        public async Task<bool> ExisteNombreUsuarioAsync(string nombreUsuario)
+        {
+            // Un trigger de la BD tampoco permite que el nombre de usuario coincida con el correo de otra cuenta
+            return await _context.Usuarios.AnyAsync(u =>
+                u.NombreUsuario == nombreUsuario || u.CorreoElectronico == nombreUsuario);
+        }
+
+        public async Task CrearUsuarioAsync(Usuario usuario)
+        {
+            await _context.Usuarios.AddAsync(usuario);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<List<Usuario>> ListarPorRolAsync(string rolName)
+        {
+            return await _context.Usuarios
+                .AsNoTracking()
+                .Where(u => u.Rol.Descripcion == rolName)
+                .OrderBy(u => u.NombreUsuario)
+                .ToListAsync();
+        }
+
         public async Task<bool> RegisterUserAndClientAsync(Usuario usuario, Cliente cliente)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();

@@ -62,12 +62,22 @@ builder.Services.AddScoped<IReseniaRepository, ReseniaRepository>();
 builder.Services.AddScoped<IReseniaService, ReseniaService>();
 builder.Services.AddScoped<ICompraRepository, CompraRepository>();
 builder.Services.AddScoped<ICompraService, CompraService>();
+builder.Services.AddScoped<IClienteRepository, ClienteRepository>();
+builder.Services.AddScoped<IClienteService, ClienteService>();
+builder.Services.AddScoped<IProductoShopRepository, ProductoShopRepository>();
+builder.Services.AddScoped<IProductoShopService, ProductoShopService>();
+builder.Services.AddScoped<IComboRepository, ComboRepository>();
+builder.Services.AddScoped<IComboService, ComboService>();
 builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 
 // Inyección de configuración JWT
+// La sección en appsettings.json se llama "Jwt" (la misma que usa UsuarioService para firmar el token).
+// Antes se leía "JwtSettings", que no existe: se validaba con otra clave y sin Issuer/Audience,
+// por lo que ningún token generado en el login iba a ser aceptado.
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-var secretKey = jwtSettings["Key"] ?? "ClaveDeRespaldoTemporalParaDesarrollo32Chars";
+var secretKey = jwtSettings["Key"]
+    ?? throw new InvalidOperationException("Falta configurar 'Jwt:Key' en appsettings.json.");
 
 builder.Services.AddAuthorization();
 
@@ -108,6 +118,15 @@ if (app.Environment.IsDevelopment())
 
 
 app.UseHttpsRedirection();
+
+// Sirve los archivos de wwwroot (las portadas de las películas quedan en wwwroot/portadas).
+// La carpeta se crea acá por si no existe: si falta al arrancar, ASP.NET no serviría ningún archivo.
+var carpetaWwwroot = Path.Combine(app.Environment.ContentRootPath, "wwwroot");
+Directory.CreateDirectory(Path.Combine(carpetaWwwroot, "portadas"));
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(carpetaWwwroot)
+});
 
 app.UseCors("Front");
 

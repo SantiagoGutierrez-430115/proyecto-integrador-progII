@@ -1,5 +1,6 @@
 ﻿using BCrypt.Net;
 using Cine.Data.DTOs;
+using Cine.Data.Exceptions;
 using Cine.Data.Models;
 using Cine.Data.Repositories.Interfaces;
 using Cine.Data.Services.Interfaces;
@@ -33,7 +34,6 @@ namespace Cine.Data.Services.Implementations
 
             try
             {
-                // Verifica el hash
                 if (!BCrypt.Net.BCrypt.Verify(dto.Password, usuario.Contraseña))
                 {
                     return null; // Contraseña incorrecta
@@ -78,6 +78,50 @@ namespace Cine.Data.Services.Implementations
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        public async Task<AdminDto> RegisterAdminAsync(RegistroAdminDto dto)
+        {
+            var email = dto.Email.Trim();
+            var nombreUsuario = dto.NombreUsuario.Trim();
+
+            if (await _usuarioRepository.GetUsuarioByEmailAsync(email) != null)
+                throw new ConflictoException("El correo electrónico ya está en uso.");
+
+            if (await _usuarioRepository.ExisteNombreUsuarioAsync(nombreUsuario))
+                throw new ConflictoException("El nombre de usuario ya está en uso.");
+
+            var rolAdmin = await _usuarioRepository.GetRoleByNameAsync("Admin")
+                ?? throw new InvalidOperationException("No se encontró el rol 'Admin' en la base de datos.");
+
+            // El admin es solo un usuario: NO se crea cliente
+            var usuario = new Usuario
+            {
+                NombreUsuario = nombreUsuario,
+                CorreoElectronico = email,
+                Contraseña = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                IdRol = rolAdmin.IdRol
+            };
+
+            await _usuarioRepository.CrearUsuarioAsync(usuario);
+
+            return new AdminDto
+            {
+                IdUsuario = usuario.IdUsuario,
+                NombreUsuario = usuario.NombreUsuario,
+                Email = usuario.CorreoElectronico
+            };
+        }
+
+        public async Task<List<AdminDto>> ListarAdminsAsync()
+        {
+            var admins = await _usuarioRepository.ListarPorRolAsync("Admin");
+            return admins.Select(u => new AdminDto
+            {
+                IdUsuario = u.IdUsuario,
+                NombreUsuario = u.NombreUsuario,
+                Email = u.CorreoElectronico
+            }).ToList();
         }
 
         public async Task<bool> RegisterAsync(RegisterDto registerDto)

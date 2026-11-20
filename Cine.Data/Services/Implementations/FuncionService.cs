@@ -50,7 +50,6 @@ namespace Cine.Data.Services.Implementations
 
             var creada = await repo.CreateAsync(funcion);
 
-            // Devolver DTO
             return new FuncionDto
             {
                 IdFuncion = creada.IdFuncion,
