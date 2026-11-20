@@ -17,7 +17,6 @@ namespace TPI_Cine.Controllers
             _comboService = comboService;
         }
 
-        // GET api/combo?descripcion=grande&idTipoCombo=1&pagina=1&tamanio=10
         [HttpGet]
         public async Task<IActionResult> GetAll(
             [FromQuery] string? descripcion, [FromQuery] int? idTipoCombo,

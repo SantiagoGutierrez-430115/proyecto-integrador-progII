@@ -17,7 +17,6 @@ namespace TPI_Cine.Controllers
             _productoShopService = productoShopService;
         }
 
-        // GET api/productoshop?nombre=pochoclo&idMarca=1&idTipoProducto=2&pagina=1&tamanio=10
         [HttpGet]
         public async Task<IActionResult> GetAll(
             [FromQuery] string? nombre, [FromQuery] int? idMarca, [FromQuery] int? idTipoProducto,

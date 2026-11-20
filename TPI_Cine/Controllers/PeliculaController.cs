@@ -23,7 +23,6 @@ namespace TPI_Cine.Controllers
             _env = env;
         }
 
-        // GET api/pelicula?titulo=avatar&idGenero=2&idClasificacion=1&pagina=1&tamanio=10
         // incluirInactivas=true solo tiene efecto si quien pide es Admin
         [HttpGet]
         public async Task<IActionResult> GetAll(
