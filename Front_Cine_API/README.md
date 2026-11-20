@@ -15,6 +15,8 @@ no usa datos de ejemplo ni `localStorage` para la información del cine.
    5. `Script_indicadores_dashboard.sql` (procedimientos del dashboard)
    6. `Script_usuario_admin.sql` (primer administrador)
    7. `Datos_ventas.sql` (opcional: ventas de prueba para que el dashboard tenga datos)
+   8. `Datos_demo_defensa.sql` (opcional, **siempre último**: salas de 80/60/40 butacas, 24 clientes
+      `cliente01`…`cliente24` con contraseña `Cliente123` y 48 reservas)
 2. **API:** abrir `TPI_Cine.slnx` en Visual Studio e iniciar con el perfil **https**
    (queda en `https://localhost:7032`). La primera vez puede hacer falta confiar en el certificado:
    ```bash
